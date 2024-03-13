@@ -67,15 +67,7 @@ func (t *ChainStatsTask) Exec() {
 			lastHour := now.Add(-1 * time.Hour).Truncate(time.Hour)
 			format := lastHour.Format("2006010215")
 			parseUint, _ := strconv.ParseUint(format, 10, 32)
-			chainStatHour := &model.ChainStatHour{
-				AddressCount:      0,
-				InscriptionsCount: 0,
-				BalanceSum:        decimal.NewFromInt(0),
-				Chain:             chain,
-				DateHour:          uint32(parseUint),
-				AddressLastId:     t.cfg.Stat.AddressStartId,
-				BalanceLastId:     t.cfg.Stat.BalanceStartId,
-			}
+
 			u, _ := strconv.ParseUint(lastHour.Add(-1*time.Hour).Truncate(time.Hour).Format("2006010215"), 10, 32)
 			chainStat, _ := t.dbc.FindLastChainStatHourByChainAndDateHour(chain, uint32(u))
 			if chainStat == nil {
@@ -86,7 +78,15 @@ func (t *ChainStatsTask) Exec() {
 					Chain:         chain,
 				}
 			}
-
+			chainStatHour := &model.ChainStatHour{
+				AddressCount:      0,
+				InscriptionsCount: 0,
+				BalanceSum:        decimal.NewFromInt(0),
+				Chain:             chain,
+				DateHour:          uint32(parseUint),
+				AddressLastId:     chainStat.AddressLastId,
+				BalanceLastId:     chainStat.BalanceLastId,
+			}
 			var wg sync.WaitGroup
 			wg.Add(2)
 			go func() {
