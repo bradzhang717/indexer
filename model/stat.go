@@ -48,7 +48,7 @@ type GroupChainStatHour struct {
 	Chain             string          `json:"chain" gorm:"column:chain"`
 	AddressCount      uint32          `json:"address_count" gorm:"column:address_count"`
 	InscriptionsCount uint32          `json:"inscriptions_count" gorm:"column:inscriptions_count"`
-	BalanceSum        decimal.Decimal `json:"balance_amount_sum" gorm:"column:balance_amount_sum;type:decimal(38,18)"`
+	BalanceSum        decimal.Decimal `json:"balance_sum" gorm:"column:balance_sum;type:decimal(38,18)"`
 }
 
 func (GroupChainStatHour) TableName() string {
