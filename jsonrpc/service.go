@@ -265,6 +265,7 @@ func (s *Service) GetTransactions(chain string, address string, tick string, lim
 			Status:          v.Status,
 			CreatedAt:       v.CreatedAt,
 			UpdatedAt:       v.UpdatedAt,
+			Amount:          v.Amount,
 		}
 		transactions = append(transactions, trs)
 	}
