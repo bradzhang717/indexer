@@ -877,7 +877,7 @@ func (conn *DBClient) GroupChainBlockStat(startTime time.Time, end time.Time, st
 
 	startTimeStr := utils.TimeLineFormat(startTime)
 	endTimeStr := utils.TimeLineFormat(end)
-	tx := conn.SqlDB.Select("block_height,count(distinct(tick)) as tick_count,count(*) as transaction_count,min(created_at) as created_at")
+	tx := conn.SqlDB.Select("block_height,count(distinct(tick)) as tick_count,count(*) as transaction_count,min(block_time) as block_time")
 	if startId > 0 {
 		tx = tx.Where("id >= ? and chain = ?", startId, chain)
 	} else {
