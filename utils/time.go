@@ -119,9 +119,8 @@ func TimeFormatDayHours(dayUnit int) []int64 {
 
 func TimeFormatHourBeginAndEnd(dayUnit int) (time.Time, time.Time) {
 
-	const hourLayout = "2006010215"
 	dateStr := strconv.Itoa(dayUnit)
-	t, err := time.Parse(hourLayout, dateStr)
+	t, err := time.Parse(hourFormat, dateStr)
 	if err != nil {
 		fmt.Println("Error parsing date:", err)
 	}
