@@ -100,7 +100,7 @@ func TimeLineFormat(tm time.Time) string {
 
 }
 
-func TimeFormatHourBeginAndEnd(dayUnit int) []int64 {
+func TimeFormatDayHours(dayUnit int) []int64 {
 
 	const layout = "20060102"
 	const hourLayout = "2006010215"
