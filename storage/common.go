@@ -730,10 +730,9 @@ func (conn *DBClient) FindAddressTxByHash(chain string, hash common.Hash) (*mode
 	return tx, nil
 }
 
-func (conn *DBClient) FindBalanceByTxHash(hash string) ([]*model.BalanceTxn, error) {
+func (conn *DBClient) FindBalanceByTxHash(hash common.Hash) ([]*model.BalanceTxn, error) {
 	balances := make([]*model.BalanceTxn, 0)
-	str := "SELECT * FROM balance_txn WHERE tx_hash = " + hash
-	err := conn.SqlDB.Raw(str).Find(&balances).Error
+	err := conn.SqlDB.Model(&model.BalanceTxn{}).Where("tx_hash = ?", hash).Find(&balances).Error
 	if err != nil {
 		return nil, err
 	}
@@ -904,4 +903,17 @@ func (conn *DBClient) CountTickByChain(chain string) int64 {
 	var total int64
 	conn.SqlDB.Model(model.Inscriptions{}).Where("chain = ?", chain).Count(&total)
 	return total
+}
+
+func (conn *DBClient) FindFirstTxsByBlockTime(chain string, blockTime string) (*model.Transaction, error) {
+	tx := &model.Transaction{}
+	err := conn.SqlDB.First(tx, "block_time >= ? and chain = ?", blockTime, chain).Error
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
+}
+
+func (conn *DBClient) DeleteChainStatByChainAndDateHour(chain string, dateHour uint64) error {
+	return conn.SqlDB.Where("chain = ? and date_hour = ?", chain, dateHour).Delete(&model.ChainStatHour{}).Error
 }

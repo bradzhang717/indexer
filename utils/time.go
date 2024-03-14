@@ -100,7 +100,7 @@ func TimeLineFormat(tm time.Time) string {
 
 }
 
-func TimeFormatDayHours(dayUnit int) []int64 {
+func TimeFormatDayHours(dayUnit int) []uint64 {
 
 	dateStr := strconv.Itoa(dayUnit)
 	date, err := time.Parse(dateFormat, dateStr)
@@ -108,10 +108,10 @@ func TimeFormatDayHours(dayUnit int) []int64 {
 		fmt.Println("Error parsing date:", err)
 	}
 
-	ret := make([]int64, 0)
+	ret := make([]uint64, 0)
 	for hour := 0; hour < 24; hour++ {
 		hourTime := time.Date(date.Year(), date.Month(), date.Day(), hour, 0, 0, 0, date.Location())
-		hint, _ := strconv.ParseInt(hourTime.Format(hourFormat), 10, 0)
+		hint, _ := strconv.ParseUint(hourTime.Format(hourFormat), 10, 0)
 		ret = append(ret, hint)
 	}
 	return ret

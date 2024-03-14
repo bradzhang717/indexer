@@ -7,9 +7,11 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/uxuycom/indexer/model"
 	"github.com/uxuycom/indexer/protocol"
+	"github.com/uxuycom/indexer/storage"
 	"github.com/uxuycom/indexer/utils"
 	"github.com/uxuycom/indexer/xylog"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -315,13 +317,13 @@ func (s *Service) Search(keyword, chain string) (interface{}, error) {
 		}
 		if len(keyword) == 66 {
 			// tx hash
-			result.Data, _ = s.rpcServer.dbc.FindBalanceByTxHash(keyword)
+			result.Data, _ = s.rpcServer.dbc.FindBalanceByTxHash(common.Hash([]byte(keyword)))
 			result.Type = "TxHash"
 		}
 	} else {
 		if len(keyword) == 64 {
 			// tx hash
-			result.Data, _ = s.rpcServer.dbc.FindBalanceByTxHash(keyword)
+			result.Data, _ = s.rpcServer.dbc.FindBalanceByTxHash(common.Hash([]byte(keyword)))
 			result.Type = "TxHash"
 		} else {
 			// address
@@ -842,4 +844,102 @@ func (s *Service) GetChainInfo(chain string) (interface{}, error) {
 		MintCount:    0,
 	}
 	return chainInfoExt, nil
+}
+
+func (s *Service) AddChainStatFromTxsByDay(chain string, day int) (interface{}, error) {
+	xylog.Logger.Infof("AddChainStatFromTxsByDay chain:%v, day:%v", chain, day)
+	// day=20240210
+	hours := utils.TimeFormatDayHours(day)
+	for hour := range hours {
+		s.rpcServer.dbc.DeleteChainStatByChainAndDateHour(chain, uint64(hour))
+		txs, _ := s.rpcServer.dbc.FindFirstTxsByBlockTime(chain, "")
+		if txs == nil {
+			xylog.Logger.Infof("AddChainStatFromTxsByDay chain:%v, day:%v, txs is nil", chain, day)
+			continue
+		}
+		addressTxs, _ := s.rpcServer.dbc.FindAddressTxByHash(chain, common.BytesToHash(txs.TxHash))
+		balanceTxs, _ := s.rpcServer.dbc.FindBalanceByTxHash(common.BytesToHash(txs.TxHash))
+
+		chainStat := &model.ChainStatHour{
+			AddressLastId: addressTxs.ID,
+			BalanceLastId: balanceTxs[0].ID,
+			Chain:         chain,
+		}
+		chainStatHour := &model.ChainStatHour{
+			AddressCount:      0,
+			InscriptionsCount: 0,
+			BalanceSum:        decimal.NewFromInt(0),
+			Chain:             chain,
+			DateHour:          uint32(hour),
+			AddressLastId:     chainStat.AddressLastId,
+			BalanceLastId:     chainStat.BalanceLastId,
+		}
+		begin, end := utils.TimeFormatHourBeginAndEnd(hour)
+		var wg sync.WaitGroup
+		wg.Add(2)
+		go func() {
+			// address
+			handleAddress(chainStat, chainStatHour, end, begin, 100, s.rpcServer.dbc)
+			defer wg.Done()
+		}()
+
+		go func() {
+			// balance
+			handleBalance(chainStat, chainStatHour, end, begin, 100, s.rpcServer.dbc)
+			defer wg.Done()
+		}()
+		wg.Wait()
+
+		// inscriptions
+		inscriptions, _ := s.rpcServer.dbc.FindInscriptionsTxByIdAndChainAndLimit(chainStat.Chain, end, begin)
+		chainStatHour.InscriptionsCount = uint32(len(inscriptions))
+		// add stat
+		err := s.rpcServer.dbc.AddChainStatHour(chainStatHour)
+		if err != nil {
+			xylog.Logger.Errorf("AddChainStatHour error: %v chainStatHour: %v", err, chainStatHour)
+		}
+
+	}
+	return nil, nil
+}
+
+func handleAddress(chainStat, chainStatHour *model.ChainStatHour, nowHour, lastHour time.Time, limit int, dbc *storage.DBClient) *model.ChainStatHour {
+
+	addresses, _ := dbc.FindAddressTxByIdAndChainAndLimit(chainStat.Chain, chainStat.AddressLastId, limit)
+	if len(addresses) > 0 {
+		for _, a := range addresses {
+			if a.CreatedAt.After(nowHour) {
+				return chainStatHour
+			}
+			if a.CreatedAt.Before(nowHour) && a.CreatedAt.After(lastHour) {
+				chainStatHour.AddressCount++
+				chainStatHour.AddressLastId = a.ID
+			}
+			chainStat.AddressLastId = a.ID
+		}
+		return handleAddress(chainStat, chainStatHour, nowHour, lastHour, limit, dbc)
+	} else {
+		return chainStatHour
+	}
+}
+
+func handleBalance(chainStat, chainStatHour *model.ChainStatHour,
+	nowHour, lastHour time.Time, limit int, dbc *storage.DBClient) *model.ChainStatHour {
+
+	balances, _ := dbc.FindBalanceTxByIdAndChainAndLimit(chainStat.Chain, chainStat.BalanceLastId, limit)
+	if len(balances) > 0 {
+		for _, b := range balances {
+			if b.CreatedAt.After(nowHour) {
+				return chainStatHour
+			}
+			if b.CreatedAt.Before(nowHour) && b.CreatedAt.After(lastHour) {
+				chainStatHour.BalanceSum = chainStatHour.BalanceSum.Add(b.Amount)
+				chainStatHour.BalanceLastId = b.ID
+			}
+			chainStat.BalanceLastId = b.ID
+		}
+		return handleBalance(chainStat, chainStatHour, nowHour, lastHour, limit, dbc)
+	} else {
+		return chainStatHour
+	}
 }
