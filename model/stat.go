@@ -48,7 +48,7 @@ type GroupChainStatHour struct {
 	Chain             string          `json:"chain" gorm:"column:chain"`
 	AddressCount      uint32          `json:"address_count" gorm:"column:address_count"`
 	InscriptionsCount uint32          `json:"inscriptions_count" gorm:"column:inscriptions_count"`
-	BalanceSum        decimal.Decimal `json:"balance_amount_sum" gorm:"column:balance_amount_sum;type:decimal(38,18)"`
+	BalanceSum        decimal.Decimal `json:"balance_sum" gorm:"column:balance_sum;type:decimal(38,18)"`
 }
 
 func (GroupChainStatHour) TableName() string {
@@ -72,7 +72,7 @@ type ChainBlockStat struct {
 	BlockHeight      uint64    `json:"block_height" gorm:"column:block_height"`
 	TickCount        uint32    `json:"tick_count" gorm:"column:tick_count"`
 	TransactionCount uint32    `json:"transaction_count" gorm:"column:transaction_count"`
-	CreatedAt        time.Time `json:"created_at" gorm:"column:created_at"`
+	BlockTime        time.Time `json:"block_time" gorm:"column:block_time"`
 }
 
 func (ChainBlockStat) TableName() string {
