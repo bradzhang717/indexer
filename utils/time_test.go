@@ -56,3 +56,11 @@ func Test_TimeLineFormat(t *testing.T) {
 	t.Logf("time %v", formattedTime)
 
 }
+
+func Test_TimeFormatHourBeginAndEnd(t *testing.T) {
+
+	day := 20240314
+	begin := TimeFormatHourBeginAndEnd(day)
+	t.Logf("begin: %v", begin)
+
+}
