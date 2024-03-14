@@ -57,10 +57,20 @@ func Test_TimeLineFormat(t *testing.T) {
 
 }
 
-func Test_TimeFormatHourBeginAndEnd(t *testing.T) {
-
+func Test_TimeFormatHours(t *testing.T) {
 	day := 20240314
 	begin := TimeFormatDayHours(day)
 	t.Logf("begin: %v", begin)
+
+}
+
+func Test_TimeFormatHourBeginAndEnd(t *testing.T) {
+	day := 20240314
+	hours := TimeFormatDayHours(day)
+
+	for _, value := range hours {
+		s, e := TimeFormatHourBeginAndEnd(int(value))
+		t.Logf("begin: %v, end:=%v", s, e)
+	}
 
 }

@@ -119,3 +119,17 @@ func TimeFormatDayHours(dayUnit int) []int64 {
 	}
 	return ret
 }
+
+func TimeFormatHourBeginAndEnd(dayUnit int) (string, string) {
+
+	const hourLayout = "2006010215"
+	dateStr := strconv.Itoa(dayUnit)
+	t, err := time.Parse(hourLayout, dateStr)
+	if err != nil {
+		fmt.Println("Error parsing date:", err)
+	}
+	startOfHour := t
+	endOfHour := t.Add(time.Hour - time.Second)
+	return startOfHour.Format(timeLineFormat), endOfHour.Format(timeLineFormat)
+
+}
