@@ -94,6 +94,9 @@ func main() {
 	// init task
 	task.InitTask(dbClient, &cfg)
 
+	// index api
+	explorer.IndexApi()
+
 	// Listen for SIGINT and SIGTERM signals
 	quit := make(chan os.Signal, 1)
 	dEvent := devents.NewDEvents(context.TODO(), dbClient)
