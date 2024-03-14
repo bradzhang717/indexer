@@ -350,6 +350,10 @@ type ChainBlockStatCmd struct {
 type ChainInfoCmd struct {
 	Chain string
 }
+type AddChainStatFromTxsByDayCmd struct {
+	Chain string
+	Day   int
+}
 type InscriptionsData struct {
 	Protocol string          `json:"p"`
 	Operate  string          `json:"op"`
@@ -392,5 +396,6 @@ func init() {
 	MustRegisterCmd("inds_chainStat", (*ChainStatCmd)(nil), flags)
 	MustRegisterCmd("inds_chainBlockStat", (*ChainBlockStatCmd)(nil), flags)
 	MustRegisterCmd("inds_chainInfo", (*ChainInfoCmd)(nil), flags)
+	MustRegisterCmd("inds_addChainStatFromTxsByDay", (*AddChainStatFromTxsByDayCmd)(nil), flags)
 
 }
