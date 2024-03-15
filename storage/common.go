@@ -866,7 +866,7 @@ func (conn *DBClient) GroupChainStatHour(limit, offset int, chain []string) ([]m
 	if len(chain) > 0 {
 		sql += "chain in (" + strings.Join(chain, ",") + ")"
 	}
-	sql += " ORDER BY id DESC limit " + strconv.Itoa(limit) + "," + strconv.Itoa(offset) + ") as csh GROUP BY `chain`"
+	sql += " ORDER BY id DESC limit " + strconv.Itoa(offset) + "," + strconv.Itoa(limit) + ") as csh GROUP BY `chain`"
 	tx := conn.SqlDB.Raw(sql)
 	err := tx.Find(&stats).Error
 	if err != nil {
