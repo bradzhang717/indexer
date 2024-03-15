@@ -11,3 +11,4 @@ log
 dev_config.json
 test_config.json
 dev_config_jsonrpc.json
+btc_dev_config.json
