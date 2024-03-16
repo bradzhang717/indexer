@@ -67,6 +67,10 @@ type RpcBlock struct {
 	TxHash       string            `json:"transactionsRoot" gencodec:"required"`
 	Hash         string            `json:"hash"`
 	Transactions []*RpcTransaction `json:"transactions"`
+
+	// These fields are added for btc chain
+	Txs    []*Tx                 `json:"block"`
+	RpcTxs []btcjson.TxRawResult `json:"rpc_txs"`
 }
 
 type RpcTransaction struct {

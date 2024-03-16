@@ -202,6 +202,35 @@ func (conn *DBClient) BatchUpdatesBySID(dbTx *gorm.DB, chain string, tblName str
 	return nil, ret.RowsAffected
 }
 
+func (conn *DBClient) BatchUpdatesBySIDKey(dbTx *gorm.DB, chain string, uniqKey string, tblName string, fields map[string]string, values []map[string]interface{}) (error, int64) {
+	if len(values) < 1 {
+		return nil, 0
+	}
+
+	updates := make([]string, 0, len(fields))
+	for field, vt := range fields {
+		update := fmt.Sprintf(" %s = CASE  ", field)
+		tpl := fmt.Sprintf(" WHEN %s = '%s' THEN '%s'", uniqKey, "%v", vt)
+		for _, value := range values {
+			update += fmt.Sprintf(tpl, value[uniqKey], value[field])
+		}
+		update += " END"
+		updates = append(updates, update)
+	}
+
+	ids := make([]string, 0, len(values))
+	for _, value := range values {
+		ids = append(ids, fmt.Sprintf("'%v'", value[uniqKey]))
+	}
+
+	finalSql := fmt.Sprintf("UPDATE %s SET %s WHERE chain = '%s' AND `%s` IN (%s)", tblName, strings.Join(updates, ","), chain, uniqKey, strings.Join(ids, ","))
+	ret := dbTx.Exec(finalSql)
+	if ret.Error != nil {
+		return ret.Error, 0
+	}
+	return nil, ret.RowsAffected
+}
+
 func (conn *DBClient) BatchUpdateInscriptionStats(dbTx *gorm.DB, chain string, items []*model.InscriptionsStats) error {
 	if len(items) < 1 {
 		return nil
@@ -262,6 +291,38 @@ func (conn *DBClient) BatchAddBalances(dbTx *gorm.DB, items []*model.Balances) e
 		return nil
 	}
 	return conn.CreateInBatches(dbTx, items, 2000)
+}
+
+func (conn *DBClient) BatchAddUTXOs(dbTx *gorm.DB, items []*model.UTXO) error {
+	if len(items) < 1 {
+		return nil
+	}
+	return conn.CreateInBatches(dbTx, items, 1000)
+}
+
+func (conn *DBClient) BatchUpdateUTXOs(dbTx *gorm.DB, chain string, items []*model.UTXO) error {
+	if len(items) < 1 {
+		return nil
+	}
+
+	fields := map[string]string{
+		"address": "%s",
+		"status":  "%v",
+	}
+
+	vals := make([]map[string]interface{}, 0, len(items))
+	for _, item := range items {
+		vals = append(vals, map[string]interface{}{
+			"sn":      item.Sn,
+			"address": item.Address,
+			"status":  item.Status,
+		})
+	}
+	err, _ := conn.BatchUpdatesBySIDKey(dbTx, chain, "sn", model.UTXO{}.TableName(), fields, vals)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (conn *DBClient) BatchUpdateBalances(dbTx *gorm.DB, chain string, items []*model.Balances) error {

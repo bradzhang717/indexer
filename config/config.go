@@ -37,8 +37,11 @@ type ScanConfig struct {
 }
 
 type ChainConfig struct {
+	ChainId    int              `json:"chain_id" mapstructure:"chain_id"`
 	ChainName  string           `json:"chain_name" mapstructure:"chain_name"`
 	Rpc        string           `json:"rpc"`
+	OrdRpc     string           `json:"ord_rpc" mapstructure:"ord_rpc"`
+	Testnet    bool             `json:"testnet"`
 	UserName   string           `json:"username"`
 	PassWord   string           `json:"password"`
 	ChainGroup model.ChainGroup `json:"chain_group" mapstructure:"chain_group"`

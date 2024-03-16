@@ -239,7 +239,7 @@ func (e *Explorer) batchScan(startBlock, endBlock uint64) error {
 		xylog.Logger.Infof("batchScan blocks cost[%v], blocks[%d-%d], num[%d], delayed[%d]", time.Since(startTs), startBlock, endBlock, endBlock-startBlock+1, e.latestBlockNum.Load()-e.currentBlockNum.Load())
 	}()
 
-	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.TODO(), 100*time.Second)
 	defer cancel()
 
 	blockLogsChan := make(chan map[string][]xycommon.RpcLog)

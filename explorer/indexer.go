@@ -28,6 +28,7 @@ import (
 	"github.com/alitto/pond"
 	"github.com/uxuycom/indexer/client/xycommon"
 	"github.com/uxuycom/indexer/devents"
+	"github.com/uxuycom/indexer/model"
 	"github.com/uxuycom/indexer/protocol"
 	"github.com/uxuycom/indexer/protocol/common"
 	"github.com/uxuycom/indexer/xyerrors"
@@ -264,24 +265,27 @@ func (e *Explorer) handleBlock(block *xycommon.RpcBlock) {
 			xylog.Logger.Infof("block nil or number[%d] <= 0", block.Number.Uint64())
 			return
 		}
-
-		// extract txs from block & fast checking invalid tx
-		txs := e.extractTxsFromBlock(block)
-
-		// try filter invalid txs
-		txs = e.tryFilterTxs(txs)
-
-		// Add receipt data & filter invalid status
-		txs, err := e.validReceiptTxs(txs)
-		if err != nil {
-			xylog.Logger.Errorf("fetch receipt data internal err:%v & retry later[%d]", err, retry)
-			retry++
-			<-time.After(time.Millisecond * 100)
-			continue
-		}
-
 		// Handle: parse txs & sync cache / db
-		err = e.handleTxs(block, txs)
+		var err *xyerrors.InsError
+		if e.config.Chain.ChainGroup == model.BtcChainGroup {
+			err = e.handleBtcTxs(block)
+		} else {
+			// extract txs from block & fast checking invalid tx
+			txs := e.extractTxsFromBlock(block)
+
+			// try filter invalid txs
+			txs = e.tryFilterTxs(txs)
+
+			// Add receipt data & filter invalid status
+			txs, err := e.validReceiptTxs(txs)
+			if err != nil {
+				xylog.Logger.Errorf("fetch receipt data internal err:%v & retry later[%d]", err, retry)
+				retry++
+				<-time.After(time.Millisecond * 100)
+				continue
+			}
+			err = e.handleTxs(block, txs)
+		}
 		if err != nil {
 			xylog.Logger.Errorf("parse internal err:%v & retry later[%d]", err, retry)
 			retry++
@@ -293,7 +297,7 @@ func (e *Explorer) handleBlock(block *xycommon.RpcBlock) {
 }
 
 func (e *Explorer) writeDBAsync(block *xycommon.RpcBlock, txResults []*devents.DBModelEvent) {
-	if block == nil || len(txResults) <= 0 {
+	if block == nil {
 		return
 	}
 
@@ -302,7 +306,7 @@ func (e *Explorer) writeDBAsync(block *xycommon.RpcBlock, txResults []*devents.D
 	//write db async
 	event := &devents.Event{
 		Chain:     e.config.Chain.ChainName,
-		ChainId:   txResults[0].Tx.ChainId,
+		ChainId:   int64(e.config.Chain.ChainId),
 		BlockNum:  block.Number.Uint64(),
 		BlockTime: block.Time,
 		BlockHash: block.Hash,

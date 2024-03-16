@@ -28,6 +28,7 @@ import (
 	"github.com/uxuycom/indexer/xylog"
 	"gorm.io/gorm"
 	"math/rand"
+	"runtime/debug"
 	"time"
 )
 
@@ -128,6 +129,14 @@ func (h *DEvent) releaseDBLock(db *storage.DBClient) {
 }
 
 func (h *DEvent) Sink(db *storage.DBClient) bool {
+
+	defer func() {
+		if err := recover(); err != nil {
+			stack := string(debug.Stack())
+			xylog.Logger.Panicf("Sink db error & quit, err[%v], stack=%v", err, stack)
+		}
+		xylog.Logger.Infof("Sink db quit")
+	}()
 	//get events from channel
 	events := h.Read(100)
 
@@ -233,7 +242,7 @@ func (h *DEvent) Sink(db *storage.DBClient) bool {
 			}
 		}
 
-		// update balances
+		//update balances
 		if items := dm.Balances[DBActionCreate]; len(items) > 0 {
 			if err := db.BatchAddBalances(tx, items); err != nil {
 				xylog.Logger.Errorf("failed insert balances records. err=%s", err)
@@ -244,6 +253,23 @@ func (h *DEvent) Sink(db *storage.DBClient) bool {
 		// update inscriptions
 		if items := dm.Balances[DBActionUpdate]; len(items) > 0 {
 			err := db.BatchUpdateBalances(tx, chain, items)
+			if err != nil {
+				xylog.Logger.Errorf("failed update balances records. err=%s", err)
+				return err
+			}
+		}
+
+		// insert utxos
+		if items := dm.UTXOs[DBActionCreate]; len(items) > 0 {
+			if err := db.BatchAddUTXOs(tx, items); err != nil {
+				xylog.Logger.Errorf("failed insert balances records. err=%s", err)
+				return err
+			}
+		}
+
+		// update utxos
+		if items := dm.UTXOs[DBActionUpdate]; len(items) > 0 {
+			err := db.BatchUpdateUTXOs(tx, chain, items)
 			if err != nil {
 				xylog.Logger.Errorf("failed update balances records. err=%s", err)
 				return err

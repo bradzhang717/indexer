@@ -45,6 +45,7 @@ type DBModelEvent struct {
 	Balances         map[DBAction][]*model.Balances
 	AddressTxs       []*model.AddressTxs
 	BalanceTxs       []*model.BalanceTxn
+	UTXOs            map[DBAction]*model.UTXO
 }
 
 func (tc *TxResultHandler) BuildModel(r *TxResult) *DBModelEvent {
@@ -349,6 +350,7 @@ type DBModelsFattened struct {
 	Inscriptions     map[DBAction][]*model.Inscriptions
 	InscriptionStats map[DBAction][]*model.InscriptionsStats
 	Balances         map[DBAction][]*model.Balances
+	UTXOs            map[DBAction][]*model.UTXO
 	Txs              []*model.Transaction
 	AddressTxs       []*model.AddressTxs
 	BalanceTxs       []*model.BalanceTxn
@@ -359,6 +361,7 @@ type DBModels struct {
 	Inscriptions     map[DBAction]map[uint32]*model.Inscriptions
 	InscriptionStats map[DBAction]map[uint32]*model.InscriptionsStats
 	Balances         map[DBAction]map[uint64]*model.Balances
+	UTXOs            map[DBAction]map[string]*model.UTXO
 	Txs              map[string]*model.Transaction
 	AddressTxs       []*model.AddressTxs
 	BalanceTxs       []*model.BalanceTxn
@@ -377,6 +380,10 @@ func BuildDBUpdateModel(blocksEvents []*Event) (dmf *DBModelsFattened) {
 		Balances: map[DBAction]map[uint64]*model.Balances{
 			DBActionCreate: make(map[uint64]*model.Balances, 100),
 			DBActionUpdate: make(map[uint64]*model.Balances, 100),
+		},
+		UTXOs: map[DBAction]map[string]*model.UTXO{
+			DBActionCreate: make(map[string]*model.UTXO, 100),
+			DBActionUpdate: make(map[string]*model.UTXO, 100),
 		},
 		Txs:        make(map[string]*model.Transaction, len(blocksEvents)*2),
 		AddressTxs: make([]*model.AddressTxs, 0, len(blocksEvents)*2),
@@ -427,6 +434,13 @@ func BuildDBUpdateModel(blocksEvents []*Event) (dmf *DBModelsFattened) {
 				dm.BalanceTxs = append(dm.BalanceTxs, event.BalanceTxs...)
 			}
 
+			for action, item := range event.UTXOs {
+				if _, ok := dm.UTXOs[action][item.Sn]; ok {
+					xylog.Logger.Debugf("utxo sn[%s] exist & force update, tick[%s]", item.Sn, item.Tick)
+				}
+				dm.UTXOs[action][item.Sn] = item
+			}
+
 			for action, items := range event.Balances {
 				for _, item := range items {
 					if _, ok := dm.Balances[action][item.SID]; ok {
@@ -459,6 +473,10 @@ func BuildDBUpdateModel(blocksEvents []*Event) (dmf *DBModelsFattened) {
 		Balances: map[DBAction][]*model.Balances{
 			DBActionCreate: make([]*model.Balances, 0, 100),
 			DBActionUpdate: make([]*model.Balances, 0, 100),
+		},
+		UTXOs: map[DBAction][]*model.UTXO{
+			DBActionCreate: make([]*model.UTXO, 0, 100),
+			DBActionUpdate: make([]*model.UTXO, 0, 100),
 		},
 		Txs:         make([]*model.Transaction, 0, len(dm.Txs)),
 		AddressTxs:  dm.AddressTxs,
@@ -493,6 +511,14 @@ func BuildDBUpdateModel(blocksEvents []*Event) (dmf *DBModelsFattened) {
 	}
 	for _, item := range dm.Balances[DBActionUpdate] {
 		dmf.Balances[DBActionUpdate] = append(dmf.Balances[DBActionUpdate], item)
+	}
+
+	// flatten balances records
+	for _, item := range dm.UTXOs[DBActionCreate] {
+		dmf.UTXOs[DBActionCreate] = append(dmf.UTXOs[DBActionCreate], item)
+	}
+	for _, item := range dm.UTXOs[DBActionUpdate] {
+		dmf.UTXOs[DBActionUpdate] = append(dmf.UTXOs[DBActionUpdate], item)
 	}
 	return dmf
 }
