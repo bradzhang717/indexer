@@ -308,7 +308,7 @@ type TxOperateResponse struct {
 
 type GetTxByHashCmd struct {
 	Chain  string
-	TxHash common.Hash
+	TxHash string
 }
 
 type TransactionResponse struct {

@@ -541,7 +541,7 @@ func (s *Service) GetAddressTransactions(protocol string, tick string, chain str
 	return resp, nil
 }
 
-func (s *Service) GetTxByHash(txHash common.Hash, chain string) (interface{}, error) {
+func (s *Service) GetTxByHash(txHash string, chain string) (interface{}, error) {
 
 	cacheKey := fmt.Sprintf("tx_info_%s_%s", chain, txHash)
 	if ins, ok := s.rpcServer.cacheStore.Get(cacheKey); ok {
@@ -549,7 +549,7 @@ func (s *Service) GetTxByHash(txHash common.Hash, chain string) (interface{}, er
 			return allIns, nil
 		}
 	}
-	tx, err := s.rpcServer.dbc.FindTransaction(chain, txHash)
+	tx, err := s.rpcServer.dbc.FindTransaction(chain, common.HexToHash(txHash))
 	if err != nil {
 		return nil, err
 	}
@@ -559,7 +559,7 @@ func (s *Service) GetTxByHash(txHash common.Hash, chain string) (interface{}, er
 	resp := &GetTxByHashResponse{}
 	inscription, err := s.rpcServer.dbc.FindInscriptionByTick(tx.Chain, tx.Protocol, tx.Tick)
 	// get amount from address tx tab
-	addressTx, err := s.rpcServer.dbc.FindAddressTxByHash(chain, txHash)
+	addressTx, err := s.rpcServer.dbc.FindAddressTxByHash(chain, common.HexToHash(txHash))
 	resp.IsInscription = true
 
 	resp.Inscriptions = inscription
