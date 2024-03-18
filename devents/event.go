@@ -250,7 +250,7 @@ func (h *DEvent) Sink(db *storage.DBClient) bool {
 				for _, v := range items {
 					err := tx.Set(
 						"gorm:insert_option",
-						"ON DUPLICATE KEY UPDATE address = VALUES(address), chain = VALUES(chain),  protocol = VALUES(protocol),  tick = VALUES(tick)",
+						"ON DUPLICATE KEY UPDATE address = VALUES(address), chain = VALUES(chain), protocol = VALUES(protocol), tick = VALUES(tick)",
 					).Create(v).Error
 					if err != nil {
 						return err
