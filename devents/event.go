@@ -24,6 +24,7 @@ package devents
 
 import (
 	"context"
+	"github.com/uxuycom/indexer/model"
 	"github.com/uxuycom/indexer/storage"
 	"github.com/uxuycom/indexer/xylog"
 	"gorm.io/gorm"
@@ -244,9 +245,22 @@ func (h *DEvent) Sink(db *storage.DBClient) bool {
 
 		//update balances
 		if items := dm.Balances[DBActionCreate]; len(items) > 0 {
-			if err := db.BatchAddBalances(tx, items); err != nil {
-				xylog.Logger.Errorf("failed insert balances records. err=%s", err)
-				return err
+
+			if chain == model.ChainBTC {
+				for _, v := range items {
+					err := tx.Set(
+						"gorm:insert_option",
+						"ON DUPLICATE KEY UPDATE address = VALUES(address), chain = VALUES(chain),  protocol = VALUES(protocol),  tick = VALUES(tick)",
+					).Create(v).Error
+					if err != nil {
+						return err
+					}
+				}
+			} else {
+				if err := db.BatchAddBalances(tx, items); err != nil {
+					xylog.Logger.Errorf("failed insert balances records. err=%s", err)
+					return err
+				}
 			}
 		}
 
