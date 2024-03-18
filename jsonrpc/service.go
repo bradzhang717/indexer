@@ -318,6 +318,7 @@ func (s *Service) Search(keyword, chain string) (interface{}, error) {
 		if len(keyword) == 66 {
 			// tx hash
 			tx, _ := s.rpcServer.dbc.FindTransaction("", common.HexToHash(keyword))
+			xylog.Logger.Infof("search tx hash:%v", tx)
 			if tx != nil {
 				trs := &TransactionResponse{
 					ID:              tx.ID,
@@ -346,6 +347,7 @@ func (s *Service) Search(keyword, chain string) (interface{}, error) {
 		if len(keyword) == 64 {
 			// tx hash
 			tx, _ := s.rpcServer.dbc.FindTransaction("", common.HexToHash(keyword))
+			xylog.Logger.Infof("search tx hash:%v", tx)
 			if tx != nil {
 				trs := &TransactionResponse{
 					ID:              tx.ID,
