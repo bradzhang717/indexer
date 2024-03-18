@@ -317,13 +317,13 @@ func (s *Service) Search(keyword, chain string) (interface{}, error) {
 		}
 		if len(keyword) == 66 {
 			// tx hash
-			result.Data, _ = s.rpcServer.dbc.FindBalanceByTxHash(common.Hash([]byte(keyword)))
+			result.Data, _ = s.rpcServer.dbc.FindBalanceByTxHash(common.HexToHash(keyword))
 			result.Type = "TxHash"
 		}
 	} else {
 		if len(keyword) == 64 {
 			// tx hash
-			result.Data, _ = s.rpcServer.dbc.FindBalanceByTxHash(common.Hash([]byte(keyword)))
+			result.Data, _ = s.rpcServer.dbc.FindBalanceByTxHash(common.HexToHash(keyword))
 			result.Type = "TxHash"
 		} else {
 			// address
