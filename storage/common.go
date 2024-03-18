@@ -403,7 +403,7 @@ func (conn *DBClient) FindTransaction(chain string, hash common.Hash) (*model.Tr
 	if chain != "" {
 		query = query.Where("chain = ?", chain)
 	}
-	err := query.Order("id desc").First(txn).Error
+	err := query.Last(txn).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
