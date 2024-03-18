@@ -33,6 +33,7 @@ import (
 	"gorm.io/gorm/logger"
 	"math/big"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -921,11 +922,14 @@ func (conn *DBClient) GroupChainStatHourBy24Hour(startHour, endHour uint32, chai
 
 func (conn *DBClient) GroupChainStatHour(limit, offset int, chain []string) ([]model.GroupChainStatHour, error) {
 	stats := make([]model.GroupChainStatHour, 0)
-	tx := conn.SqlDB.Select("chain,SUM(address_count) as address_count,SUM(inscriptions_count) as inscriptions_count,SUM(balance_sum) as balance_sum")
+	sql := "SELECT chain,SUM(address_count) as address_count,SUM(inscriptions_count) as inscriptions_count,SUM(balance_sum) as balance_sum FROM " +
+		"( SELECT * FROM chain_stats_hour "
 	if len(chain) > 0 {
-		tx = tx.Where("chain in ?", chain)
+		sql += "chain in (" + strings.Join(chain, ",") + ")"
 	}
-	err := tx.Table("chain_stats_hour").Limit(limit).Offset(offset).Group("chain").Find(&stats).Error
+	sql += " ORDER BY id DESC limit " + strconv.Itoa(offset) + "," + strconv.Itoa(limit) + ") as csh GROUP BY `chain`"
+	tx := conn.SqlDB.Raw(sql)
+	err := tx.Find(&stats).Error
 	if err != nil {
 		return nil, err
 	}

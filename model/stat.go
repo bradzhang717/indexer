@@ -61,11 +61,11 @@ type Chain24HourStat struct {
 	Name              string          `json:"name"`
 	Logo              string          `json:"logo"`
 	Address24h        uint32          `json:"address_24h"`
-	Address24hPercent uint32          `json:"address_24h_percent"`
+	Address24hPercent float32         `json:"address_24h_percent"`
 	Tick24h           uint32          `json:"tick_24h"`
-	Tick24hPercent    uint32          `json:"tick_24h_percent"`
+	Tick24hPercent    float32         `json:"tick_24h_percent"`
 	Balance24h        decimal.Decimal `json:"balance_24h"`
-	Balance24hPercent uint32          `json:"balance_24h_percent"`
+	Balance24hPercent float32         `json:"balance_24h_percent"`
 }
 
 type ChainBlockStat struct {

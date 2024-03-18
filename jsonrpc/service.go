@@ -769,22 +769,22 @@ func (s *Service) GetChainStat(chain []string) (interface{}, error) {
 			}
 			for _, b := range yesterdayStat {
 				if b.Chain == a.Chain {
-					if a.AddressCount == 0 || b.AddressCount == 0 {
-						chain24HourStat.Address24hPercent = 0
+					if b.AddressCount == 0 {
+						chain24HourStat.Address24hPercent = float32(a.AddressCount)
 					} else {
-						chain24HourStat.Address24hPercent = a.AddressCount / b.AddressCount
+						chain24HourStat.Address24hPercent = float32(a.AddressCount) / float32(b.AddressCount)
 					}
 					partA := a.BalanceSum.IntPart()
 					partB := b.BalanceSum.IntPart()
-					if partA == 0 || partB == 0 {
-						chain24HourStat.Balance24hPercent = 0
+					if partB == 0 {
+						chain24HourStat.Balance24hPercent = float32(partA)
 					} else {
-						chain24HourStat.Balance24hPercent = uint32(partA / partB)
+						chain24HourStat.Balance24hPercent = float32(partA) / float32(partB)
 					}
-					if a.InscriptionsCount == 0 || b.InscriptionsCount == 0 {
-						chain24HourStat.Tick24hPercent = 0
+					if b.InscriptionsCount == 0 {
+						chain24HourStat.Tick24hPercent = float32(a.InscriptionsCount)
 					} else {
-						chain24HourStat.Tick24hPercent = a.InscriptionsCount / b.InscriptionsCount
+						chain24HourStat.Tick24hPercent = float32(a.InscriptionsCount) / float32(b.InscriptionsCount)
 					}
 
 				}
