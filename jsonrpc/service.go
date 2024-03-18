@@ -317,13 +317,57 @@ func (s *Service) Search(keyword, chain string) (interface{}, error) {
 		}
 		if len(keyword) == 66 {
 			// tx hash
-			result.Data, _ = s.rpcServer.dbc.FindBalanceByTxHash(common.HexToHash(keyword))
+			tx, _ := s.rpcServer.dbc.FindTransaction("", common.HexToHash(keyword))
+			if tx != nil {
+				trs := &TransactionResponse{
+					ID:              tx.ID,
+					Chain:           tx.Chain,
+					Protocol:        tx.Protocol,
+					BlockHeight:     tx.BlockHeight,
+					PositionInBlock: tx.PositionInBlock,
+					BlockTime:       tx.BlockTime,
+					TxHash:          common.BytesToHash(tx.TxHash),
+					From:            tx.From,
+					To:              tx.To,
+					Op:              tx.Op,
+					Tick:            tx.Tick,
+					Amount:          tx.Amount,
+					Gas:             tx.Gas,
+					GasPrice:        tx.GasPrice,
+					Status:          tx.Status,
+					CreatedAt:       tx.CreatedAt,
+					UpdatedAt:       tx.UpdatedAt,
+				}
+				result.Data = trs
+			}
 			result.Type = "TxHash"
 		}
 	} else {
 		if len(keyword) == 64 {
 			// tx hash
-			result.Data, _ = s.rpcServer.dbc.FindBalanceByTxHash(common.HexToHash(keyword))
+			tx, _ := s.rpcServer.dbc.FindTransaction("", common.HexToHash(keyword))
+			if tx != nil {
+				trs := &TransactionResponse{
+					ID:              tx.ID,
+					Chain:           tx.Chain,
+					Protocol:        tx.Protocol,
+					BlockHeight:     tx.BlockHeight,
+					PositionInBlock: tx.PositionInBlock,
+					BlockTime:       tx.BlockTime,
+					TxHash:          common.BytesToHash(tx.TxHash),
+					From:            tx.From,
+					To:              tx.To,
+					Op:              tx.Op,
+					Tick:            tx.Tick,
+					Amount:          tx.Amount,
+					Gas:             tx.Gas,
+					GasPrice:        tx.GasPrice,
+					Status:          tx.Status,
+					CreatedAt:       tx.CreatedAt,
+					UpdatedAt:       tx.UpdatedAt,
+				}
+				result.Data = trs
+			}
 			result.Type = "TxHash"
 		} else {
 			// address

@@ -399,7 +399,11 @@ func (conn *DBClient) FindUserBalanceByTick(chain, protocol, tick, addr string) 
 
 func (conn *DBClient) FindTransaction(chain string, hash common.Hash) (*model.Transaction, error) {
 	txn := &model.Transaction{}
-	err := conn.SqlDB.First(txn, "chain = ? AND tx_hash = ?", chain, hash).Error
+	query := conn.SqlDB.Select(txn, "tx_hash = ?", hash)
+	if chain != "" {
+		query = query.Where("chain = ?", chain)
+	}
+	err := query.First(&txn).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
