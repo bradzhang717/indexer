@@ -92,7 +92,6 @@ func (c *OrdClient) doCallContext(ctx context.Context, path string, out interfac
 	}
 
 	uri := fmt.Sprintf("%s/%s", c.endpoint, strings.TrimLeft(path, "/"))
-	//logs.Logger.Debugf("111-call ord api[%s] data:[%s]", path, uri)
 	req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
 	if err != nil {
 		xylog.Logger.Debugf("111-call ord api[%s] data:[%s] err[%s]", path, "====", err)
@@ -104,10 +103,8 @@ func (c *OrdClient) doCallContext(ctx context.Context, path string, out interfac
 
 	response, err := c.client.Do(req)
 	if err != nil {
-		//logs.Logger.Debugf("111-call ord api[%s] data:[%s]", path, "===00000=")
 		return fmt.Errorf("error sending request: %v", err)
 	}
-	//logs.Logger.Debugf("111-call ord api[%s] data:[%s] response.StatusCode[%v]", path, "====", response.StatusCode)
 	defer func() {
 		_ = response.Body.Close()
 	}()
@@ -140,7 +137,6 @@ func (c *OrdClient) doCallContext(ctx context.Context, path string, out interfac
 	}
 
 	err = json.Unmarshal(data, out)
-	//logs.Logger.Debugf("call ord api[%s] data:[%s]", path, string(data))
 	if err != nil {
 		return fmt.Errorf("error parsing response body[%s], err[%v]", string(data), err)
 	}

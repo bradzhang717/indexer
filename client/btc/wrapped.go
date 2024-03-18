@@ -71,29 +71,43 @@ func (b BClient) BlockByNumber(ctx context.Context, number *big.Int) (*xycommon.
 		xylog.Logger.Infof("btc BlockNumber blockEvent txs : [%v]", blockEvent.Txs)
 	}
 	rpcBlock := xycommon.RpcBlock{
-		Number: number,
-		Hash:   block.Hash,
-		Time:   uint64(block.Time),
-		RpcTxs: block.Tx,
-		Txs:    blockEvent.Txs,
+		Number:     number,
+		Hash:       block.Hash,
+		Time:       uint64(block.Time),
+		RpcTxs:     block.Tx,
+		Txs:        blockEvent.Txs,
+		ParentHash: block.PreviousHash,
 	}
 	return &rpcBlock, nil
 }
 
 func (b BClient) HeaderByNumber(ctx context.Context, number *big.Int) (*xycommon.RpcHeader, error) {
-	panic("implement me")
+
+	block, err := b.BlockByNumber(ctx, number)
+	if err != nil {
+		xylog.Logger.Errorf("HeaderByNumber error  BlockByNumber[%d], err=%s", number, err)
+		return nil, err
+	}
+	header := xycommon.RpcHeader{
+		ParentHash: block.ParentHash,
+		Number:     block.Number,
+		Time:       block.Time,
+		TxHash:     block.TxHash,
+	}
+	return &header, nil
 }
 
 func (b BClient) TransactionSender(ctx context.Context, txHash, blockHash string, txIndex uint) (string, error) {
-	panic("implement me")
+	return "", nil
 }
 
 func (b BClient) TransactionReceipt(ctx context.Context, txHash string) (*xycommon.RpcReceipt, error) {
-	panic("implement me")
+
+	return nil, nil
 }
 
 func (b BClient) FilterLogs(ctx context.Context, q ethereum.FilterQuery) ([]xycommon.RpcLog, error) {
-	panic("implement me")
+	return nil, nil
 }
 
 func (b BClient) GetAddressBalanceByTick(ctx context.Context, address, tick string) (balance *xycommon.RpcOkxBalance, err error) {

@@ -482,7 +482,7 @@ func (e *Explorer) buildBalance(txid string, event *xycommon.BlockEvent, block *
 			balances[action] = make([]*model.Balances, 0, 1)
 		}
 
-		balances[action] = append(balances[action], &model.Balances{
+		balances[action] = setBalances(balances[action], &model.Balances{
 			SID:       toBalance.SID,
 			Chain:     e.config.Chain.ChainName,
 			Protocol:  defaultProtocol,
@@ -490,7 +490,8 @@ func (e *Explorer) buildBalance(txid string, event *xycommon.BlockEvent, block *
 			Tick:      strings.ToLower(event.Tick),
 			Balance:   ordBalance,
 			Available: availableBalance,
-		})
+		}, action)
+
 	} else if event.Type == "transfer" {
 		amount, err := e.convertAmount(event.Amount, event.Tick)
 		if err != nil {
@@ -547,7 +548,7 @@ func (e *Explorer) buildBalance(txid string, event *xycommon.BlockEvent, block *
 				return nil, nil, err
 			}
 		}
-		balances[action] = append(balances[action], &model.Balances{
+		balances[action] = setBalances(balances[action], &model.Balances{
 			SID:       toBalance.SID,
 			Chain:     e.config.Chain.ChainName,
 			Protocol:  defaultProtocol,
@@ -555,7 +556,7 @@ func (e *Explorer) buildBalance(txid string, event *xycommon.BlockEvent, block *
 			Tick:      strings.ToLower(event.Tick),
 			Balance:   ordBalance,
 			Available: availableBalance,
-		})
+		}, action)
 
 		ok, senderBalance := e.dCache.Balance.Get(defaultProtocol, event.Tick, event.From.Address)
 		if !ok {
@@ -604,7 +605,8 @@ func (e *Explorer) buildBalance(txid string, event *xycommon.BlockEvent, block *
 				return nil, nil, err
 			}
 		}
-		balances[senderAction] = append(balances[senderAction], &model.Balances{
+
+		balances[senderAction] = setBalances(balances[senderAction], &model.Balances{
 			SID:       senderBalance.SID,
 			Chain:     e.config.Chain.ChainName,
 			Protocol:  defaultProtocol,
@@ -612,7 +614,8 @@ func (e *Explorer) buildBalance(txid string, event *xycommon.BlockEvent, block *
 			Tick:      strings.ToLower(event.Tick),
 			Balance:   senderOrdBalance,
 			Available: senderAvailableBalance,
-		})
+		}, senderAction)
+
 	} else if event.Type == "inscribeTransfer" {
 		amount, err := e.convertAmount(event.Amount, event.Tick)
 		if err != nil {
@@ -667,7 +670,7 @@ func (e *Explorer) buildBalance(txid string, event *xycommon.BlockEvent, block *
 				return nil, nil, err
 			}
 		}
-		balances[action] = append(balances[action], &model.Balances{
+		balances[action] = setBalances(balances[action], &model.Balances{
 			SID:       toBalance.SID,
 			Chain:     e.config.Chain.ChainName,
 			Protocol:  defaultProtocol,
@@ -675,10 +678,32 @@ func (e *Explorer) buildBalance(txid string, event *xycommon.BlockEvent, block *
 			Tick:      strings.ToLower(event.Tick),
 			Balance:   ordBalance,
 			Available: availableBalance,
-		})
+		}, action)
 	}
 
 	return txns, balances, nil
+}
+
+func setBalances(balances []*model.Balances, balance *model.Balances, action devents.DBAction) []*model.Balances {
+
+	if action == devents.DBActionCreate {
+		var isOk = false
+		for _, item := range balances {
+			if item.Tick == balance.Tick &&
+				item.Address == balance.Address &&
+				item.Protocol == balance.Protocol &&
+				item.Chain == balance.Chain {
+				item = balance
+				isOk = true
+			}
+		}
+		if !isOk {
+			balances = append(balances, balance)
+		}
+	} else {
+		balances = append(balances, balance)
+	}
+	return balances
 }
 
 func (e *Explorer) buildInscriptionStats(event *xycommon.BlockEvent, block *xycommon.RpcBlock) (map[devents.DBAction]*model.InscriptionsStats, error) {
