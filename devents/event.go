@@ -248,13 +248,10 @@ func (h *DEvent) Sink(db *storage.DBClient) bool {
 
 			if chain == model.ChainBTC {
 				for _, v := range items {
-					err := tx.Set(
+					tx.Set(
 						"gorm:insert_option",
 						"ON DUPLICATE KEY UPDATE address = VALUES(address), chain = VALUES(chain), protocol = VALUES(protocol), tick = VALUES(tick)",
-					).Create(v).Error
-					if err != nil {
-						return err
-					}
+					).Create(v)
 				}
 			} else {
 				if err := db.BatchAddBalances(tx, items); err != nil {
