@@ -714,13 +714,15 @@ func (e *Explorer) buildInscriptionStats(event *xycommon.BlockEvent, block *xyco
 		return nil, nil
 	}
 	data := &model.InscriptionsStats{
-		SID:      d.SID,
-		Chain:    e.config.Chain.ChainName,
-		Protocol: defaultProtocol,
-		Tick:     strings.ToLower(event.Tick),
-		Minted:   d.Minted,
-		Holders:  uint64(d.Holders),
-		TxCnt:    d.TxCnt,
+		SID:               d.SID,
+		Chain:             e.config.Chain.ChainName,
+		Protocol:          defaultProtocol,
+		Tick:              strings.ToLower(event.Tick),
+		Minted:            d.Minted,
+		Holders:           uint64(d.Holders),
+		TxCnt:             d.TxCnt,
+		InscriptionId:     event.InscriptionId,
+		InscriptionNumber: event.InscriptionNumber,
 	}
 
 	if event.Type == "mint" {
@@ -771,17 +773,19 @@ func (e *Explorer) buildInscription(txid string, event *xycommon.BlockEvent, blo
 		return nil, err
 	}
 	inscription := &model.Inscriptions{
-		SID:          d.SID,
-		Chain:        e.config.Chain.ChainName,
-		Protocol:     defaultProtocol,
-		Tick:         strings.ToLower(event.Tick),
-		Name:         ins.Tick,
-		LimitPerMint: ins.LimitPerMint,
-		TotalSupply:  ins.TotalSupply,
-		DeployBy:     ins.Owner,
-		DeployHash:   txid,
-		DeployTime:   time.Unix(int64(block.Time), 0),
-		Decimals:     ins.Decimals,
+		SID:               d.SID,
+		Chain:             e.config.Chain.ChainName,
+		Protocol:          defaultProtocol,
+		Tick:              strings.ToLower(event.Tick),
+		Name:              ins.Tick,
+		LimitPerMint:      ins.LimitPerMint,
+		TotalSupply:       ins.TotalSupply,
+		DeployBy:          ins.Owner,
+		DeployHash:        txid,
+		DeployTime:        time.Unix(int64(block.Time), 0),
+		Decimals:          ins.Decimals,
+		InscriptionId:     ins.Id,
+		InscriptionNumber: ins.Number,
 	}
 	ret[devents.DBActionCreate] = inscription
 
@@ -814,6 +818,7 @@ func (e *Explorer) GetInscription(id string) (*xycommon.Inscription, error) {
 		LimitPerMint: limit,
 		TotalSupply:  totalSupply,
 		Decimals:     defaultTickDecimals,
+		Number:       ins.Number,
 		Owner:        ins.Owner.Address,
 	}, nil
 }

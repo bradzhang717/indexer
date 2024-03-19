@@ -34,21 +34,23 @@ const (
 )
 
 type Inscriptions struct {
-	ID           uint32          `gorm:"primaryKey" json:"id"` // ID
-	SID          uint32          `json:"sid"  gorm:"column:sid"`
-	Chain        string          `json:"chain" gorm:"column:chain"`
-	Protocol     string          `json:"protocol" gorm:"column:protocol"`
-	Tick         string          `json:"tick" gorm:"column:tick"`
-	Name         string          `json:"name" gorm:"column:name"`
-	LimitPerMint decimal.Decimal `gorm:"column:limit_per_mint;type:decimal(38,18)" json:"limit_per_mint"`
-	DeployBy     string          `json:"deploy_by" gorm:"column:deploy_by"`
-	TotalSupply  decimal.Decimal `gorm:"column:total_supply;type:decimal(38,18)" json:"total_supply"`
-	DeployHash   string          `json:"deploy_hash" gorm:"column:deploy_hash"`
-	DeployTime   time.Time       `json:"deploy_time" gorm:"column:deploy_time"`
-	TransferType int8            `json:"transfer_type" gorm:"column:transfer_type"`
-	CreatedAt    time.Time       `json:"created_at" gorm:"column:created_at"`
-	UpdatedAt    time.Time       `json:"updated_at" gorm:"column:updated_at"`
-	Decimals     int8            `json:"decimals" gorm:"column:decimals"`
+	ID                uint32          `gorm:"primaryKey" json:"id"` // ID
+	SID               uint32          `json:"sid"  gorm:"column:sid"`
+	InscriptionId     string          `json:"inscription_id"  gorm:"column:inscription_id"`
+	InscriptionNumber int64           `json:"inscription_number"  gorm:"column:inscription_number"`
+	Chain             string          `json:"chain" gorm:"column:chain"`
+	Protocol          string          `json:"protocol" gorm:"column:protocol"`
+	Tick              string          `json:"tick" gorm:"column:tick"`
+	Name              string          `json:"name" gorm:"column:name"`
+	LimitPerMint      decimal.Decimal `gorm:"column:limit_per_mint;type:decimal(38,18)" json:"limit_per_mint"`
+	DeployBy          string          `json:"deploy_by" gorm:"column:deploy_by"`
+	TotalSupply       decimal.Decimal `gorm:"column:total_supply;type:decimal(38,18)" json:"total_supply"`
+	DeployHash        string          `json:"deploy_hash" gorm:"column:deploy_hash"`
+	DeployTime        time.Time       `json:"deploy_time" gorm:"column:deploy_time"`
+	TransferType      int8            `json:"transfer_type" gorm:"column:transfer_type"`
+	CreatedAt         time.Time       `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt         time.Time       `json:"updated_at" gorm:"column:updated_at"`
+	Decimals          int8            `json:"decimals" gorm:"column:decimals"`
 }
 
 func (Inscriptions) TableName() string {
@@ -59,6 +61,8 @@ func (Inscriptions) TableName() string {
 type InscriptionsStats struct {
 	ID                uint32          `gorm:"primaryKey" json:"id"`
 	SID               uint32          `json:"sid"  gorm:"column:sid"`
+	InscriptionId     string          `json:"inscription_id"  gorm:"column:inscription_id"`
+	InscriptionNumber int64           `json:"inscription_number"  gorm:"column:inscription_number"`
 	Chain             string          `json:"chain" gorm:"column:chain"`
 	Protocol          string          `json:"protocol" gorm:"column:protocol"`
 	Tick              string          `json:"tick" gorm:"column:tick"`
