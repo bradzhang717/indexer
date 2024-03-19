@@ -363,11 +363,13 @@ func (e *Explorer) buildUTXO(event *xycommon.BlockEvent, block *xycommon.RpcBloc
 				Chain:    e.config.Chain.ChainName,
 				Protocol: defaultProtocol,
 				Tick:     strings.ToLower(event.Tick),
-				Sn:       event.InscriptionId,
-				Status:   model.UTXOStatusUnspent,
-				RootHash: block.TxHash,
-				Address:  event.To.Address,
-				Amount:   amount,
+				//Sn:                event.InscriptionId,
+				Status:            model.UTXOStatusUnspent,
+				RootHash:          block.TxHash,
+				Address:           event.To.Address,
+				Amount:            amount,
+				InscriptionId:     event.InscriptionId,
+				InscriptionNumber: event.InscriptionNumber,
 			},
 		}, nil
 	}
@@ -375,10 +377,12 @@ func (e *Explorer) buildUTXO(event *xycommon.BlockEvent, block *xycommon.RpcBloc
 	if event.Type == "transfer" {
 		return map[devents.DBAction]*model.UTXO{
 			devents.DBActionUpdate: {
-				Chain:   e.config.Chain.ChainName,
-				Sn:      event.InscriptionId,
-				Address: event.From.Address,
-				Status:  model.UTXOStatusSpent,
+				Chain: e.config.Chain.ChainName,
+				//Sn:                event.InscriptionId,
+				Address:           event.From.Address,
+				Status:            model.UTXOStatusSpent,
+				InscriptionId:     event.InscriptionId,
+				InscriptionNumber: event.InscriptionNumber,
 			},
 		}, nil
 	}

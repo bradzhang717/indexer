@@ -313,15 +313,15 @@ func (conn *DBClient) BatchUpdateUTXOs(dbTx *gorm.DB, chain string, items []*mod
 		"status":  "%v",
 	}
 
-	vals := make([]map[string]interface{}, 0, len(items))
+	values := make([]map[string]interface{}, 0, len(items))
 	for _, item := range items {
-		vals = append(vals, map[string]interface{}{
-			"sn":      item.Sn,
-			"address": item.Address,
-			"status":  item.Status,
+		values = append(values, map[string]interface{}{
+			"inscription_id": item.InscriptionId,
+			"address":        item.Address,
+			"status":         item.Status,
 		})
 	}
-	err, _ := conn.BatchUpdatesBySIDKey(dbTx, chain, "sn", model.UTXO{}.TableName(), fields, vals)
+	err, _ := conn.BatchUpdatesBySIDKey(dbTx, chain, "inscription_id", model.UTXO{}.TableName(), fields, values)
 	if err != nil {
 		return err
 	}
@@ -359,15 +359,15 @@ func (conn *DBClient) BatchUpdateBalances(dbTx *gorm.DB, chain string, items []*
 		"balance":   "%s",
 	}
 
-	vals := make([]map[string]interface{}, 0, len(items))
+	values := make([]map[string]interface{}, 0, len(items))
 	for _, item := range items {
-		vals = append(vals, map[string]interface{}{
+		values = append(values, map[string]interface{}{
 			"sid":       item.SID,
 			"available": item.Available,
 			"balance":   item.Balance,
 		})
 	}
-	err, _ := conn.BatchUpdatesBySID(dbTx, chain, model.Balances{}.TableName(), fields, vals)
+	err, _ := conn.BatchUpdatesBySID(dbTx, chain, model.Balances{}.TableName(), fields, values)
 	if err != nil {
 		return err
 	}

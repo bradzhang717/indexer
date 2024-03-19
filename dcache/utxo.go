@@ -38,11 +38,11 @@ type UTXO struct {
 }
 
 type UTXOItem struct {
-	Protocol string
-	Tick     string
-	Amount   decimal.Decimal
-	Owner    string
-	SN       string
+	Protocol      string
+	Tick          string
+	Amount        decimal.Decimal
+	Owner         string
+	InscriptionId string
 }
 
 func NewUTXO() *UTXO {
@@ -62,14 +62,14 @@ func (d *UTXO) idx(txHash string) string {
 /***************************************
  * Add new utxo record
  ***************************************/
-func (d *UTXO) Add(protocol, tick, txHash, address string, amount decimal.Decimal, sn string) {
+func (d *UTXO) Add(protocol, tick, txHash, address string, amount decimal.Decimal, inscriptionId string) {
 	idx := d.idx(txHash)
 	d.hashes.Store(idx, &UTXOItem{
-		Protocol: protocol,
-		Tick:     tick,
-		Amount:   amount,
-		Owner:    address,
-		SN:       sn,
+		Protocol:      protocol,
+		Tick:          tick,
+		Amount:        amount,
+		Owner:         address,
+		InscriptionId: inscriptionId,
 	})
 }
 

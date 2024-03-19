@@ -435,10 +435,10 @@ func BuildDBUpdateModel(blocksEvents []*Event) (dmf *DBModelsFattened) {
 			}
 
 			for action, item := range event.UTXOs {
-				if _, ok := dm.UTXOs[action][item.Sn]; ok {
-					xylog.Logger.Debugf("utxo sn[%s] exist & force update, tick[%s]", item.Sn, item.Tick)
+				if _, ok := dm.UTXOs[action][item.InscriptionId]; ok {
+					xylog.Logger.Debugf("utxo sn[%s] exist & force update, tick[%s]", item.InscriptionId, item.Tick)
 				}
-				dm.UTXOs[action][item.Sn] = item
+				dm.UTXOs[action][item.InscriptionId] = item
 			}
 
 			for action, items := range event.Balances {

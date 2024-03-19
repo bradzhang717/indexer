@@ -51,18 +51,20 @@ func (Balances) TableName() string {
 }
 
 type UTXO struct {
-	ID        uint64          `gorm:"primaryKey" json:"id"`
-	Sn        string          `json:"sn" gorm:"column:sn"`
-	Chain     string          `json:"chain" gorm:"column:chain"`
-	Protocol  string          `json:"protocol" gorm:"column:protocol"`
-	Address   string          `json:"address" gorm:"column:address"`
-	Tick      string          `json:"tick" gorm:"column:tick"`
-	Amount    decimal.Decimal `json:"amount" gorm:"column:amount;type:decimal(38,18)"` // amount
-	RootHash  string          `json:"root_hash" gorm:"column:root_hash"`
-	TxHash    string          `json:"tx_hash" gorm:"column:tx_hash"`
-	Status    int8            `json:"status" gorm:"column:status"` // tx status
-	CreatedAt time.Time       `json:"created_at" gorm:"column:created_at"`
-	UpdatedAt time.Time       `json:"updated_at" gorm:"column:updated_at"`
+	ID uint64 `gorm:"primaryKey" json:"id"`
+	//Sn                string          `json:"sn" gorm:"column:sn"`
+	InscriptionId     string          `json:"inscription_id"  gorm:"column:inscription_id"`
+	InscriptionNumber int64           `json:"inscription_number"  gorm:"column:inscription_number"`
+	Chain             string          `json:"chain" gorm:"column:chain"`
+	Protocol          string          `json:"protocol" gorm:"column:protocol"`
+	Address           string          `json:"address" gorm:"column:address"`
+	Tick              string          `json:"tick" gorm:"column:tick"`
+	Amount            decimal.Decimal `json:"amount" gorm:"column:amount;type:decimal(38,18)"` // amount
+	RootHash          string          `json:"root_hash" gorm:"column:root_hash"`
+	TxHash            string          `json:"tx_hash" gorm:"column:tx_hash"`
+	Status            int8            `json:"status" gorm:"column:status"` // tx status
+	CreatedAt         time.Time       `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt         time.Time       `json:"updated_at" gorm:"column:updated_at"`
 }
 
 func (UTXO) TableName() string {
