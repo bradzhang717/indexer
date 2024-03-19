@@ -29,7 +29,9 @@ import (
 	"github.com/uxuycom/indexer/config"
 	"github.com/uxuycom/indexer/model"
 	"github.com/uxuycom/indexer/utils"
+	"github.com/uxuycom/indexer/xylog"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
 	"math/big"
 	"reflect"
@@ -322,6 +324,27 @@ func (conn *DBClient) BatchUpdateUTXOs(dbTx *gorm.DB, chain string, items []*mod
 	err, _ := conn.BatchUpdatesBySIDKey(dbTx, chain, "sn", model.UTXO{}.TableName(), fields, vals)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (conn *DBClient) InsertOrUpdateBalances(dbTx *gorm.DB, items []*model.Balances) error {
+	if len(items) < 1 {
+		return nil
+	}
+	for _, v := range items {
+		err := dbTx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "address"}, {Name: "chain"}, {Name: "protocol"}, {Name: "tick"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{
+				"sid":        v.SID,
+				"available":  v.Available,
+				"balance":    v.Balance,
+				"updated_at": v.UpdatedAt,
+			}),
+		}).Create(v)
+		if err != nil {
+			xylog.Logger.Errorf("insert_option err = %v available = %v, balance =%v", err, v.Available, v.Balance)
+		}
 	}
 	return nil
 }

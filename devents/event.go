@@ -247,11 +247,9 @@ func (h *DEvent) Sink(db *storage.DBClient) bool {
 		if items := dm.Balances[DBActionCreate]; len(items) > 0 {
 
 			if chain == model.ChainBTC {
-				for _, v := range items {
-					tx.Set(
-						"gorm:insert_option",
-						"ON DUPLICATE KEY UPDATE address = VALUES(address), chain = VALUES(chain), protocol = VALUES(protocol), tick = VALUES(tick)",
-					).Create(v)
+				if err := db.InsertOrUpdateBalances(tx, items); err != nil {
+					xylog.Logger.Errorf("failed insert or update balances records. err=%s", err)
+					return err
 				}
 			} else {
 				if err := db.BatchAddBalances(tx, items); err != nil {
