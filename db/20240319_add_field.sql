@@ -17,4 +17,3 @@ ALTER TABLE utxos ADD inscription_id varchar(256) NOT NULL DEFAULT ""  COMMENT "
 ALTER TABLE utxos ADD inscription_number BIGINT NOT NULL DEFAULT 0  COMMENT "inscription number";
 ALTER TABLE utxos DROP COLUMN sn;
 ALTER TABLE `utxos` ADD INDEX `idx_inscription_number` (`inscription_number`);
-
