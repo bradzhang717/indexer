@@ -994,13 +994,24 @@ func handleBalance(chainStat, chainStatHour *model.ChainStatHour,
 	}
 }
 func (s *Service) GetAllChainStat(chains []string) (interface{}, error) {
-	body := "{\"method\":\"inds_chainStat\",\"id\":1,\"jsonrpc\":\"2.0\",\"params\":[[]]}"
+
 	path := "/v2/rpc/inds_chainStat"
-	result, _ := doRequest(body, path, s.rpcServer.cfg.Config.ChainNodes)
+	params := make(map[string]interface{})
+	params["method"] = "inds_chainStat"
+	params["id"] = "1"
+	params["jsonrpc"] = "2.0"
+	params["params"] = [][]string{[]string{}}
+
+	body1, err := json.Marshal(params)
+	if err != nil {
+		xylog.Logger.Errorf("AllSearch params err=%v", err)
+	}
+
+	result, _ := doRequest(string(body1), path, s.rpcServer.cfg.Config.ChainNodes)
 	// result json to map
 	xylog.Logger.Infof("GetAllChainStat result:%v", result)
 	var resultMap map[string]interface{}
-	err := json.Unmarshal([]byte(result), &resultMap)
+	err = json.Unmarshal([]byte(result), &resultMap)
 	if err != nil {
 		return nil, err
 	}
@@ -1008,13 +1019,23 @@ func (s *Service) GetAllChainStat(chains []string) (interface{}, error) {
 }
 
 func (s *Service) AllSearch(keyword, chain string) (interface{}, error) {
-	body := "{\"method\":\"inds_search\",\"id\":1,\"jsonrpc\":\"2.0\",\"params\":[\"" + keyword + "\",\"" + chain + "\"]}"
 	path := "/v2/rpc/inds_search"
-	result, _ := doRequest(body, path, s.rpcServer.cfg.Config.ChainNodes)
+
+	params := make(map[string]interface{})
+	params["method"] = "inds_search"
+	params["id"] = "1"
+	params["jsonrpc"] = "2.0"
+	params["params"] = []string{keyword, chain}
+
+	body, err := json.Marshal(params)
+	if err != nil {
+		xylog.Logger.Errorf("AllSearch params err=%v", err)
+	}
+	result, _ := doRequest(string(body), path, s.rpcServer.cfg.Config.ChainNodes)
 	// result json to map
 	xylog.Logger.Infof("AllSearch result:%v", result)
 	var resultMap map[string]interface{}
-	err := json.Unmarshal([]byte(result), &resultMap)
+	err = json.Unmarshal([]byte(result), &resultMap)
 	if err != nil {
 		return nil, err
 	}

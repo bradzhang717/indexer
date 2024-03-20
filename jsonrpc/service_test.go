@@ -23,6 +23,7 @@
 package jsonrpc
 
 import (
+	"encoding/json"
 	"github.com/ethereum/go-ethereum/common"
 	"testing"
 )
@@ -30,4 +31,17 @@ import (
 func Test_TxHash(t *testing.T) {
 	hash := []byte("0x7ffc56b2bf20f4f3474c1fd503fc3f1fb9066c8b0665d6da11185cac892108a5")
 	t.Logf("tx_hash=%v", common.Bytes2Hex(hash))
+}
+
+func Test_json(t *testing.T) {
+
+	params := make(map[string]interface{})
+	params["method"] = "inds_chainStat"
+	params["id"] = "1"
+	params["jsonrpc"] = "2.0"
+	params["params"] = [][]string{[]string{}}
+
+	data, _ := json.Marshal(params)
+	t.Logf("data=%v", string(data))
+
 }

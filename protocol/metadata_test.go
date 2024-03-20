@@ -88,3 +88,10 @@ func TestParseEVMMetaData(t *testing.T) {
 		})
 	}
 }
+
+func Test_DecodeInput(t *testing.T) {
+
+	input := "25341e04f01db076c85ea9a27c84c83e13b166fe9db95c2865cf5e393704210c46af140780b39dc3380ee31204d7b80ce612f7754100458e4f1f7a37b86a18b623e463544d0198b72972179bf9fa39013e777240cc618957ed0ad94ab05e57505b01f0b423c4c1c000025fd711602d"
+	data, err := hex.DecodeString(input)
+	t.Logf("data = %v err =%v", string(data), err)
+}
