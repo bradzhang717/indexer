@@ -42,6 +42,7 @@ var rpcHandlersBeforeInitV2 = map[string]commandHandler{
 	"inds_chainInfo":                 indsChainInfo,
 	"inds_addChainStatFromTxsByDay":  indsAddChainStatFromTxsByDay,
 	"inds_allChainStat":              indsAllChainStat,
+	"inds_allSearch":                 indsAllSearch,
 }
 
 func indsGetAllChains(s *RpcServer, cmd interface{}, closeChan <-chan struct{}) (interface{}, error) {
@@ -246,4 +247,14 @@ func indsAllChainStat(s *RpcServer, cmd interface{}, closeChan <-chan struct{}) 
 	xylog.Logger.Infof("all chain stat cmd params:%v", req)
 	svr := NewService(s)
 	return svr.GetAllChainStat(req.Chains)
+}
+func indsAllSearch(s *RpcServer, cmd interface{}, closeChan <-chan struct{}) (interface{}, error) {
+	req, ok := cmd.(*IndsSearchCmd)
+	if !ok {
+		return ErrRPCInvalidParams, errors.New("invalid params")
+	}
+	xylog.Logger.Infof("search cmd params:%v", req)
+	svr := NewService(s)
+	return svr.AllSearch(req.Keyword, req.Chain)
+
 }

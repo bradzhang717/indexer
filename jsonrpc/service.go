@@ -994,9 +994,35 @@ func handleBalance(chainStat, chainStatHour *model.ChainStatHour,
 	}
 }
 func (s *Service) GetAllChainStat(chains []string) (interface{}, error) {
-	nodes := s.rpcServer.cfg.Config.ChainNodes
+	body := "{\"method\":\"inds_chainStat\",\"id\":1,\"jsonrpc\":\"2.0\",\"params\":[[]]}"
+	path := "/v2/rpc/inds_chainStat"
+	result, _ := doRequest(body, path, s.rpcServer.cfg.Config.ChainNodes)
+	// result json to map
+	xylog.Logger.Infof("GetAllChainStat result:%v", result)
+	var resultMap map[string]interface{}
+	err := json.Unmarshal([]byte(result), &resultMap)
+	if err != nil {
+		return nil, err
+	}
+	return resultMap["result"], nil
+}
+
+func (s *Service) AllSearch(keyword, chain string) (interface{}, error) {
+	body := "{\"method\":\"inds_search\",\"id\":1,\"jsonrpc\":\"2.0\",\"params\":[\"" + keyword + "\",\"" + chain + "\"]}"
+	path := "/v2/rpc/inds_search"
+	result, _ := doRequest(body, path, s.rpcServer.cfg.Config.ChainNodes)
+	// result json to map
+	xylog.Logger.Infof("AllSearch result:%v", result)
+	var resultMap map[string]interface{}
+	err := json.Unmarshal([]byte(result), &resultMap)
+	if err != nil {
+		return nil, err
+	}
+	return resultMap["result"], nil
+}
+func doRequest(body, path string, nodes map[string]string) (string, error) {
 	if nodes == nil {
-		return nil, nil
+		return "", nil
 	}
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -1006,16 +1032,15 @@ func (s *Service) GetAllChainStat(chains []string) (interface{}, error) {
 			TLSHandshakeTimeout: 10 * time.Second,
 		},
 	}
-	body := "{\"method\":\"inds_chainStat\",\"id\":1,\"jsonrpc\":\"2.0\",\"params\":[[]]}"
-	path := "/v2/rpc/inds_chainStat"
 	var wg sync.WaitGroup
 	wg.Add(len(nodes))
 	nodeResult := sync.Map{}
 	for chainName, host := range nodes {
-		xylog.Logger.Infof("GetAllChainStat chainName:%v, host:%v", chainName, host)
-		url := host + path
 		chainName := chainName
+		host := host
 		go func() {
+			url := host + path
+			xylog.Logger.Infof("url:%v, body:%v", url, body)
 			req, _ := http.NewRequest("POST", url, strings.NewReader(body))
 			req.Header.Set("content-type", "application/json")
 			response, _ := client.Do(req)
@@ -1024,6 +1049,7 @@ func (s *Service) GetAllChainStat(chains []string) (interface{}, error) {
 			}()
 			data, _ := io.ReadAll(response.Body)
 			nodeResult.Store(chainName, data)
+			xylog.Logger.Infof("chainName:%v, data:%v", chainName, string(data))
 			defer wg.Done()
 		}()
 	}
@@ -1035,13 +1061,5 @@ func (s *Service) GetAllChainStat(chains []string) (interface{}, error) {
 		result = string(patch)
 		return true
 	})
-	// result json to map
-	xylog.Logger.Infof("GetAllChainStat result:%v", result)
-	var chainStat map[string]interface{}
-	err := json.Unmarshal([]byte(result), &chainStat)
-	if err != nil {
-		return nil, err
-	}
-
-	return chainStat["result"], nil
+	return result, nil
 }
