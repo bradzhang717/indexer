@@ -78,6 +78,7 @@ type Inscription struct {
 	Decimals     int8            `json:"decimals"`
 	Owner        string          `json:"owner"`
 	Number       int64           `json:"number"`
+	Content      string          `json:"content"`
 }
 
 type InscriptionContent struct {

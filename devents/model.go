@@ -321,6 +321,7 @@ func (tc *TxResultHandler) BuildTx(e *TxResult) *model.Transaction {
 		Tick:            e.MD.Tick,
 		Gas:             e.Tx.Gas.Int64(),
 		GasPrice:        e.Tx.GasPrice.Int64(),
+		Content:         e.MD.Data,
 	}
 	if e.Tx.ChainID == nil {
 		trx.ChainId = 0

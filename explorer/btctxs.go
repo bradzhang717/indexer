@@ -824,6 +824,7 @@ func (e *Explorer) GetInscription(id string) (*xycommon.Inscription, error) {
 		Decimals:     defaultTickDecimals,
 		Number:       ins.Number,
 		Owner:        ins.Owner.Address,
+		Content:      string(content),
 	}, nil
 }
 
@@ -832,6 +833,15 @@ func (e *Explorer) buildTx(txId string, event *xycommon.BlockEvent, idx int, tx 
 	amount, err := e.convertAmount(event.Amount, event.Tick)
 	if err != nil {
 		return nil, err
+	}
+	ins, err := e.GetInscription(event.InscriptionId)
+	if err != nil {
+		return nil, err
+	}
+
+	var content string
+	if ins != nil {
+		content = ins.Content
 	}
 	return &model.Transaction{
 		Chain:           e.config.Chain.ChainName,
@@ -848,6 +858,7 @@ func (e *Explorer) buildTx(txId string, event *xycommon.BlockEvent, idx int, tx 
 		Gas:             0,
 		GasPrice:        0,
 		CreatedAt:       time.Unix(int64(block.Time), 0),
+		Content:         content,
 	}, nil
 }
 

@@ -124,6 +124,7 @@ type Transaction struct {
 	Status          int8            `json:"status" gorm:"column:status"`                       // tx status
 	CreatedAt       time.Time       `json:"created_at" gorm:"column:created_at"`
 	UpdatedAt       time.Time       `json:"updated_at" gorm:"column:updated_at"`
+	Content         string          `json:"content" gorm:"column:content"` // content
 }
 
 func (Transaction) TableName() string {
