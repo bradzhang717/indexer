@@ -1,15 +1,19 @@
 package jsonrpc
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
+	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/shopspring/decimal"
 	"github.com/uxuycom/indexer/model"
 	"github.com/uxuycom/indexer/protocol"
 	"github.com/uxuycom/indexer/storage"
 	"github.com/uxuycom/indexer/utils"
 	"github.com/uxuycom/indexer/xylog"
+	"io"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -988,4 +992,56 @@ func handleBalance(chainStat, chainStatHour *model.ChainStatHour,
 	} else {
 		return chainStatHour
 	}
+}
+func (s *Service) GetAllChainStat(chains []string) (interface{}, error) {
+	nodes := s.rpcServer.cfg.Config.ChainNodes
+	if nodes == nil {
+		return nil, nil
+	}
+	client := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConns:        10,
+			IdleConnTimeout:     30 * time.Second,
+			DisableKeepAlives:   false,
+			TLSHandshakeTimeout: 10 * time.Second,
+		},
+	}
+	body := "{\"method\":\"inds_chainStat\",\"id\":1,\"jsonrpc\":\"2.0\",\"params\":[[]]}"
+	path := "/v2/rpc/inds_chainStat"
+	var wg sync.WaitGroup
+	wg.Add(len(nodes))
+	nodeResult := sync.Map{}
+	for chainName, host := range nodes {
+		xylog.Logger.Infof("GetAllChainStat chainName:%v, host:%v", chainName, host)
+		url := host + path
+		chainName := chainName
+		go func() {
+			req, _ := http.NewRequest("POST", url, strings.NewReader(body))
+			req.Header.Set("content-type", "application/json")
+			response, _ := client.Do(req)
+			defer func() {
+				_ = response.Body.Close()
+			}()
+			data, _ := io.ReadAll(response.Body)
+			nodeResult.Store(chainName, data)
+			defer wg.Done()
+		}()
+	}
+	wg.Wait()
+	result := "{}"
+	nodeResult.Range(func(k, v interface{}) bool {
+		// do merge
+		patch, _ := jsonpatch.MergePatch([]byte(result), v.([]byte))
+		result = string(patch)
+		return true
+	})
+	// result json to map
+	xylog.Logger.Infof("GetAllChainStat result:%v", result)
+	var chainStat map[string]interface{}
+	err := json.Unmarshal([]byte(result), &chainStat)
+	if err != nil {
+		return nil, err
+	}
+
+	return chainStat["result"], nil
 }

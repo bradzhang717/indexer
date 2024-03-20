@@ -676,6 +676,7 @@ type RpcServerConfig struct {
 	// StartupTime is the unix timestamp for when the server that is hosting
 	// the RPC server started.
 	StartupTime int64
+	Config      *config.RpcConfig
 }
 
 // NewRPCServer returns a new instance of the RpcServer struct.
@@ -698,6 +699,7 @@ func NewRPCServer(dbc *storage.DBClient, config *config.RpcConfig) (*RpcServer, 
 		cfg: RpcServerConfig{
 			Listeners:   rpcListeners,
 			StartupTime: time.Now().Unix(),
+			Config:      cfg,
 		},
 		statusLines:            make(map[int]string),
 		requestProcessShutdown: make(chan struct{}),

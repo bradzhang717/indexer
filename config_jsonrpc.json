@@ -2,7 +2,7 @@
   "rpclisten": [
     ":6583"
   ],
-  "rpcmaxclients":10000,
+  "rpcmaxclients": 10000,
   "rpcuser": "",
   "rpcpass": "",
   "cache_store": {
@@ -19,5 +19,8 @@
   "profile": {
     "enabled": false,
     "listen": ":6060"
+  },
+  "chain_nodes": {
+    "eth": "https://eths.indexs.io"
   }
 }
