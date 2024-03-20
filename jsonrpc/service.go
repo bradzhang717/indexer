@@ -1004,7 +1004,7 @@ func (s *Service) GetAllChainStat(chains []string) (interface{}, error) {
 
 	body1, err := json.Marshal(params)
 	if err != nil {
-		xylog.Logger.Errorf("AllSearch params err=%v", err)
+		xylog.Logger.Errorf("GetAllChainStat params err=%v", err)
 	}
 
 	result, _ := doRequest(string(body1), path, s.rpcServer.cfg.Config.ChainNodes)
