@@ -397,5 +397,7 @@ func init() {
 	MustRegisterCmd("inds_chainBlockStat", (*ChainBlockStatCmd)(nil), flags)
 	MustRegisterCmd("inds_chainInfo", (*ChainInfoCmd)(nil), flags)
 	MustRegisterCmd("inds_addChainStatFromTxsByDay", (*AddChainStatFromTxsByDayCmd)(nil), flags)
+	MustRegisterCmd("inds_allChainStat", (*ChainStatCmd)(nil), flags)
+	MustRegisterCmd("inds_allSearch", (*IndsSearchCmd)(nil), flags)
 
 }

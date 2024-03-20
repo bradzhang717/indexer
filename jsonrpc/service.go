@@ -1,15 +1,19 @@
 package jsonrpc
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
+	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/shopspring/decimal"
 	"github.com/uxuycom/indexer/model"
 	"github.com/uxuycom/indexer/protocol"
 	"github.com/uxuycom/indexer/storage"
 	"github.com/uxuycom/indexer/utils"
 	"github.com/uxuycom/indexer/xylog"
+	"io"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -988,4 +992,74 @@ func handleBalance(chainStat, chainStatHour *model.ChainStatHour,
 	} else {
 		return chainStatHour
 	}
+}
+func (s *Service) GetAllChainStat(chains []string) (interface{}, error) {
+	body := "{\"method\":\"inds_chainStat\",\"id\":1,\"jsonrpc\":\"2.0\",\"params\":[[]]}"
+	path := "/v2/rpc/inds_chainStat"
+	result, _ := doRequest(body, path, s.rpcServer.cfg.Config.ChainNodes)
+	// result json to map
+	xylog.Logger.Infof("GetAllChainStat result:%v", result)
+	var resultMap map[string]interface{}
+	err := json.Unmarshal([]byte(result), &resultMap)
+	if err != nil {
+		return nil, err
+	}
+	return resultMap["result"], nil
+}
+
+func (s *Service) AllSearch(keyword, chain string) (interface{}, error) {
+	body := "{\"method\":\"inds_search\",\"id\":1,\"jsonrpc\":\"2.0\",\"params\":[\"" + keyword + "\",\"" + chain + "\"]}"
+	path := "/v2/rpc/inds_search"
+	result, _ := doRequest(body, path, s.rpcServer.cfg.Config.ChainNodes)
+	// result json to map
+	xylog.Logger.Infof("AllSearch result:%v", result)
+	var resultMap map[string]interface{}
+	err := json.Unmarshal([]byte(result), &resultMap)
+	if err != nil {
+		return nil, err
+	}
+	return resultMap["result"], nil
+}
+func doRequest(body, path string, nodes map[string]string) (string, error) {
+	if nodes == nil {
+		return "", nil
+	}
+	client := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConns:        10,
+			IdleConnTimeout:     30 * time.Second,
+			DisableKeepAlives:   false,
+			TLSHandshakeTimeout: 10 * time.Second,
+		},
+	}
+	var wg sync.WaitGroup
+	wg.Add(len(nodes))
+	nodeResult := sync.Map{}
+	for chainName, host := range nodes {
+		chainName := chainName
+		host := host
+		go func() {
+			url := host + path
+			xylog.Logger.Infof("url:%v, body:%v", url, body)
+			req, _ := http.NewRequest("POST", url, strings.NewReader(body))
+			req.Header.Set("content-type", "application/json")
+			response, _ := client.Do(req)
+			defer func() {
+				_ = response.Body.Close()
+			}()
+			data, _ := io.ReadAll(response.Body)
+			nodeResult.Store(chainName, data)
+			xylog.Logger.Infof("chainName:%v, data:%v", chainName, string(data))
+			defer wg.Done()
+		}()
+	}
+	wg.Wait()
+	result := "{}"
+	nodeResult.Range(func(k, v interface{}) bool {
+		// do merge
+		patch, _ := jsonpatch.MergePatch([]byte(result), v.([]byte))
+		result = string(patch)
+		return true
+	})
+	return result, nil
 }
