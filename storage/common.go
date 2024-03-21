@@ -343,7 +343,7 @@ func (conn *DBClient) InsertOrUpdateBalances(dbTx *gorm.DB, items []*model.Balan
 			}),
 		}).Create(v)
 		if err != nil {
-			xylog.Logger.Errorf("insert_option err = %v available = %v, balance =%v", err, v.Available, v.Balance)
+			xylog.Logger.Errorf("insert_option err = %v available = %v, balance =%v, address=%v, tick=%v", err, v.Available, v.Balance, v.Address, v.Tick)
 		}
 	}
 	return nil
