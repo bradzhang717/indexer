@@ -23,6 +23,7 @@
 package config
 
 import (
+	"fmt"
 	"github.com/spf13/viper"
 	"github.com/uxuycom/indexer/model"
 	"log"
@@ -121,21 +122,25 @@ func LoadJsonRpcConfig(cfg *RpcConfig, configFile string) {
 
 func UnmarshalConfig(configFile string, cfg interface{}) {
 	fileName := filepath.Base(configFile)
-	log.Printf("LoadConfig file path =%v", fileName)
+	fmt.Printf("LoadConfig file path =%v", fileName)
 
 	viper.SetConfigFile(fileName)
 	viper.SetConfigType("json")
 
 	dir := filepath.Dir(configFile)
-	log.Printf("LoadConfig file dir =%v", dir)
+	fmt.Printf("LoadConfig file dir =%v", dir)
 
 	viper.AddConfigPath(dir)
 
 	if err := viper.ReadInConfig(); err != nil {
+		fmt.Printf("Read file error, error:%v", err.Error())
 		log.Fatalf("Read file error, error:%v", err.Error())
+
 	}
 	if err := viper.Unmarshal(&cfg); err != nil {
+		fmt.Printf("Unmarshal config fail! error:%v ", err)
 		log.Fatalf("Unmarshal config fail! error:%v ", err)
+
 	}
 	viper.WatchConfig()
 }
