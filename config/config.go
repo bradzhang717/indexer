@@ -124,7 +124,7 @@ func UnmarshalConfig(configFile string, cfg interface{}) {
 	fmt.Printf("LoadConfig file fileName =%v\n", fileName)
 
 	//viper.SetConfigFile(fileName)
-	viper.SetConfigName(configFile)
+	viper.SetConfigName(fileName)
 	viper.SetConfigType("json")
 
 	dir := filepath.Dir(configFile)
