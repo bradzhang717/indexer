@@ -121,13 +121,13 @@ func LoadJsonRpcConfig(cfg *RpcConfig, configFile string) {
 
 func UnmarshalConfig(configFile string, cfg interface{}) {
 	fileName := filepath.Base(configFile)
-	fmt.Printf("LoadConfig file path =%v\n", fileName)
+	fmt.Printf("LoadConfig file fileName =%v\n", fileName)
 
 	viper.SetConfigFile(fileName)
 	viper.SetConfigType("json")
 
 	dir := filepath.Dir(configFile)
-	fmt.Printf("LoadConfig file dir =%v", dir)
+	fmt.Printf("LoadConfig file dir =%v\n", dir)
 
 	viper.AddConfigPath(dir)
 
