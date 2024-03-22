@@ -221,6 +221,7 @@ func (h *DEvent) Sink(db *storage.DBClient) bool {
 
 		// insert transactions
 		if len(dm.Txs) > 0 {
+
 			if err := db.BatchAddTransaction(tx, dm.Txs); err != nil {
 				xylog.Logger.Errorf("failed to create transactions. err=%s", err)
 				return err

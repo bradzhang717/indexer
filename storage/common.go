@@ -272,7 +272,7 @@ func (conn *DBClient) BatchAddTransaction(dbTx *gorm.DB, items []*model.Transact
 	if len(items) < 1 {
 		return nil
 	}
-	return conn.CreateInBatches(dbTx, items, 5000)
+	return conn.CreateInBatches(dbTx, items, 1000)
 }
 
 func (conn *DBClient) BatchAddBalanceTx(dbTx *gorm.DB, items []*model.BalanceTxn) error {
