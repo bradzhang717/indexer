@@ -748,6 +748,16 @@ func (conn *DBClient) GetBalancesChainByAddress(limit, offset int, address, chai
 	return balances, total, nil
 }
 
+func (conn *DBClient) GetHolderNumberByTick(chain, protocol, tick string) (int64, error) {
+	var count int64
+	balance := &model.Balances{}
+	result := conn.SqlDB.Raw("SELECT COUNT(1) AS num FROM "+balance.TableName()+" WHERE balance > 0 and chain = ? and protocol = ? and tick = ?", chain, protocol, tick).Scan(&count)
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	return count, nil
+}
+
 func (conn *DBClient) GetHoldersByTick(limit, offset int, chain, protocol, tick string, sortMode int) ([]*model.Balances, int64, error) {
 	var holders []*model.Balances
 	var total int64
