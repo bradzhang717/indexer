@@ -26,6 +26,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/ethereum/go-ethereum/common"
@@ -771,7 +772,7 @@ func (e *Explorer) buildInscription(txid string, event *xycommon.BlockEvent, blo
 		xylog.Logger.Infof("inscription not found. txid[%s] tick[%s]", txid, event.Tick)
 		return nil, fmt.Errorf("inscription not found. txid[%s] tick[%s]", txid, event.Tick)
 	}
-	ret := make(map[devents.DBAction]*model.Inscriptions, 1)
+	ret := make(map[devents.DBAction]*model.Inscriptions)
 	ins, err := e.GetInscription(event.InscriptionId)
 	if err != nil {
 		return nil, err
@@ -802,6 +803,9 @@ func (e *Explorer) GetInscription(id string) (*xycommon.Inscription, error) {
 	ins, err := bClient.GetInscription(context.Background(), id)
 	if err != nil {
 		return nil, err
+	}
+	if ins == nil {
+		return nil, errors.New("inscription empty, id=" + id)
 	}
 	content, err := hex.DecodeString(ins.Content)
 	if err != nil {
