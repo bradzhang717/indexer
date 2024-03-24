@@ -69,8 +69,8 @@ type RpcBlock struct {
 	Transactions []*RpcTransaction `json:"transactions"`
 
 	// These fields are added for btc chain
-	Txs    []*Tx                 `json:"block"`
-	RpcTxs []btcjson.TxRawResult `json:"rpc_txs"`
+	Txs    []*Tx                 `json:"block"`   // return from ord rpc
+	RpcTxs []btcjson.TxRawResult `json:"rpc_txs"` // return from btc rpc
 }
 
 type RpcTransaction struct {

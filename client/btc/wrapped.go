@@ -75,8 +75,8 @@ func (b BClient) BlockByNumber(ctx context.Context, number *big.Int) (*xycommon.
 		Hash:       block.Hash,
 		Time:       uint64(block.Time),
 		RpcTxs:     block.Tx,
-		Txs:        blockEvent.Txs,
 		ParentHash: block.PreviousHash,
+		Txs:        blockEvent.Txs, // get txs from ord
 	}
 	return &rpcBlock, nil
 }

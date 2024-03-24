@@ -101,13 +101,13 @@ func (e *Explorer) handleBtcTxs(block *xycommon.RpcBlock) *xyerrors.InsError {
 }
 
 func (e *Explorer) convertTxIdx(txs []btcjson.TxRawResult) (map[string]int, map[string]btcjson.TxRawResult) {
-	idxs := make(map[string]int, len(txs))
+	idTxs := make(map[string]int, len(txs))
 	newTxs := make(map[string]btcjson.TxRawResult, len(txs))
 	for idx, v := range txs {
-		idxs[v.Txid] = idx
+		idTxs[v.Txid] = idx
 		newTxs[v.Txid] = v
 	}
-	return idxs, newTxs
+	return idTxs, newTxs
 }
 
 func (e *Explorer) getAddressBalanceFromBlock(txs []*xycommon.Tx, txIdx map[string]int, blockNumber int64) (map[string]*xycommon.AddressBalance, error) {
@@ -361,10 +361,9 @@ func (e *Explorer) buildUTXO(event *xycommon.BlockEvent, block *xycommon.RpcBloc
 	if event.Type == "inscribeTransfer" {
 		return map[devents.DBAction]*model.UTXO{
 			devents.DBActionCreate: {
-				Chain:    e.config.Chain.ChainName,
-				Protocol: defaultProtocol,
-				Tick:     strings.ToLower(event.Tick),
-				//Sn:                event.InscriptionId,
+				Chain:             e.config.Chain.ChainName,
+				Protocol:          defaultProtocol,
+				Tick:              strings.ToLower(event.Tick),
 				Status:            model.UTXOStatusUnspent,
 				RootHash:          block.TxHash,
 				Address:           event.To.Address,
@@ -378,8 +377,7 @@ func (e *Explorer) buildUTXO(event *xycommon.BlockEvent, block *xycommon.RpcBloc
 	if event.Type == "transfer" {
 		return map[devents.DBAction]*model.UTXO{
 			devents.DBActionUpdate: {
-				Chain: e.config.Chain.ChainName,
-				//Sn:                event.InscriptionId,
+				Chain:             e.config.Chain.ChainName,
 				Address:           event.From.Address,
 				Status:            model.UTXOStatusSpent,
 				InscriptionId:     event.InscriptionId,

@@ -40,15 +40,6 @@ type OrdClient struct {
 	blockTimeMap *sync.Map
 }
 
-func NewOrdClient(endpoint string) *OrdClient {
-
-	return &OrdClient{
-		endpoint:     strings.TrimRight(strings.TrimSpace(endpoint), "/"),
-		client:       utils.NewHttpClient(),
-		blockTimeMap: &sync.Map{},
-	}
-}
-
 type BlockInscriptions struct {
 	Inscriptions []string `json:"inscriptions"`
 	More         bool     `json:"more"`
@@ -90,6 +81,14 @@ type ChainInfo struct {
 	Network     string      `json:"network"`
 	OrdHeight   int64       `json:"ordHeight"`
 	ChainHeight interface{} `json:"chainHeight"`
+}
+
+func NewOrdClient(endpoint string) *OrdClient {
+	return &OrdClient{
+		endpoint:     strings.TrimRight(strings.TrimSpace(endpoint), "/"),
+		client:       utils.NewHttpClient(),
+		blockTimeMap: &sync.Map{},
+	}
 }
 
 func (c *OrdClient) BlockNumber(ctx context.Context) (number int64, err error) {
