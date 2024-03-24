@@ -1,15 +1,34 @@
+// Copyright (c) 2023-2024 The UXUY Developer Team
+// License:
+// MIT License
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE
+
 package btc
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/uxuycom/indexer/client/xycommon"
+	"github.com/uxuycom/indexer/utils"
 	"github.com/uxuycom/indexer/xylog"
-	"io"
-	"net/http"
 	"net/url"
-	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -17,22 +36,15 @@ import (
 
 type OrdClient struct {
 	endpoint     string
-	client       *http.Client
+	client       *utils.HttpClient
 	blockTimeMap *sync.Map
 }
 
 func NewOrdClient(endpoint string) *OrdClient {
-	client := &http.Client{
-		Transport: &http.Transport{
-			MaxIdleConns:        10,
-			IdleConnTimeout:     30 * time.Second,
-			DisableKeepAlives:   false,
-			TLSHandshakeTimeout: 10 * time.Second,
-		},
-	}
+
 	return &OrdClient{
 		endpoint:     strings.TrimRight(strings.TrimSpace(endpoint), "/"),
-		client:       client,
+		client:       utils.NewHttpClient(),
 		blockTimeMap: &sync.Map{},
 	}
 }
@@ -68,7 +80,7 @@ type NodeInfoResponse struct {
 }
 
 type NodeInfo struct {
-	Version    string     `json:""version`
+	Version    string     `json:"version"`
 	CommitHash string     `json:"commitHash"`
 	BuildTime  string     `json:"buildTime"`
 	ChainInfo  *ChainInfo `json:"chainInfo"`
@@ -80,86 +92,12 @@ type ChainInfo struct {
 	ChainHeight interface{} `json:"chainHeight"`
 }
 
-func (c *OrdClient) doCallContext(ctx context.Context, path string, out interface{}) error {
-	startTs := time.Now()
-	defer func() {
-		xylog.Logger.Debugf("call ord api[%s] cost[%v]", path, time.Since(startTs))
-	}()
-
-	// check out whether is a pointer
-	if reflect.TypeOf(out).Kind() != reflect.Ptr {
-		return fmt.Errorf("out should be a pointer")
-	}
-
-	uri := fmt.Sprintf("%s/%s", c.endpoint, strings.TrimLeft(path, "/"))
-	req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
-	if err != nil {
-		xylog.Logger.Debugf("111-call ord api[%s] data:[%s] err[%s]", path, "====", err)
-		return fmt.Errorf("error creating request: %v", err)
-	}
-
-	// set headers
-	req.Header.Set("Accept", "application/json")
-
-	response, err := c.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("error sending request: %v", err)
-	}
-	defer func() {
-		_ = response.Body.Close()
-	}()
-
-	if response.StatusCode == http.StatusNotFound {
-		return nil
-	}
-
-	data, err := io.ReadAll(response.Body)
-	if err != nil {
-		return fmt.Errorf("error reading response body: %v", err)
-	}
-
-	if len(data) == 0 {
-		return nil
-	}
-
-	// check if out is a []byte
-	if reflect.TypeOf(out).Elem().Kind() == reflect.Slice {
-		if reflect.TypeOf(out).Elem().Elem().Kind() == reflect.Uint8 {
-			reflect.ValueOf(out).Elem().SetBytes(data)
-			return nil
-		}
-	}
-
-	// check if out is a string
-	if reflect.TypeOf(out).Elem().Kind() == reflect.String {
-		reflect.ValueOf(out).Elem().SetString(string(data))
-		return nil
-	}
-
-	err = json.Unmarshal(data, out)
-	if err != nil {
-		return fmt.Errorf("error parsing response body[%s], err[%v]", string(data), err)
-	}
-
-	return nil
-}
-
-func (c *OrdClient) callContext(ctx context.Context, path string, out interface{}) (err error) {
-	ts := time.Millisecond * 100
-	for retry := 0; retry < 5; retry++ {
-		err = c.doCallContext(ctx, path, out)
-		if err == nil {
-			return nil
-		}
-		<-time.After(ts * time.Duration(retry))
-	}
-	return err
-}
-
 func (c *OrdClient) BlockNumber(ctx context.Context) (number int64, err error) {
 	path := fmt.Sprintf("api/v1/node/info")
 	result := &NodeInfoResponse{}
-	err = c.callContext(ctx, path, &result)
+
+	apiUrl := fmt.Sprintf("%s/%s", c.endpoint, strings.TrimLeft(path, "/"))
+	err = c.client.CallContext(ctx, "GET", apiUrl, &result)
 	if result.Data != nil && result.Data.ChainInfo != nil {
 		number = result.Data.ChainInfo.OrdHeight
 	}
@@ -205,8 +143,9 @@ func (c *OrdClient) checkBlockNumber(number int64) (int64, int64) {
 
 func (c *OrdClient) BlockByHash(ctx context.Context, blockHash string) (ret *xycommon.RpcOkxBlockResponse, err error) {
 	path := fmt.Sprintf("api/v1/brc20/block/%s/events", blockHash)
+	apiUrl := fmt.Sprintf("%s/%s", c.endpoint, strings.TrimLeft(path, "/"))
 	result := &BlockEventResponse{}
-	err = c.callContext(ctx, path, &result)
+	err = c.client.CallContext(ctx, "GET", apiUrl, &result)
 	if err == nil && result.Data != nil {
 		ret = result.Data
 		ret.Hash = blockHash
@@ -216,8 +155,9 @@ func (c *OrdClient) BlockByHash(ctx context.Context, blockHash string) (ret *xyc
 
 func (c *OrdClient) GetInscription(ctx context.Context, inscriptionId string) (ins *xycommon.RpcOkxInscription, err error) {
 	path := fmt.Sprintf("api/v1/ord/id/%s/inscription", inscriptionId)
+	apiUrl := fmt.Sprintf("%s/%s", c.endpoint, strings.TrimLeft(path, "/"))
 	result := &InscriptionResponse{}
-	err = c.callContext(ctx, path, &result)
+	err = c.client.CallContext(ctx, "GET", apiUrl, &result)
 	if err == nil {
 		ins = result.Data
 	}
@@ -226,8 +166,10 @@ func (c *OrdClient) GetInscription(ctx context.Context, inscriptionId string) (i
 
 func (c *OrdClient) GetAddressBalanceByTick(ctx context.Context, address, tick string) (balance *xycommon.RpcOkxBalance, err error) {
 	path := fmt.Sprintf("api/v1/brc20/tick/%s/address/%s/balance", url.QueryEscape(tick), address)
+
+	apiUrl := fmt.Sprintf("%s/%s", c.endpoint, strings.TrimLeft(path, "/"))
 	result := &AddressBalanceResponse{}
-	err = c.callContext(ctx, path, &result)
+	err = c.client.CallContext(ctx, "GET", apiUrl, &result)
 	if err == nil && result.Data != nil {
 		balance = result.Data
 	}
