@@ -22,6 +22,11 @@
 
 package xycommon
 
+import (
+	"math/big"
+	"time"
+)
+
 type RpcOrdTxResponse struct {
 	Chain            string    `json:"chain"`
 	Etching          string    `json:"etching"`
@@ -40,6 +45,44 @@ type RpcOrdOutputResponse struct {
 	Spent        int64    `json:"spent"`
 	TxId         string   `json:"transaction"`
 	Value        int64    `json:"value"`
+}
+
+type RpcOrdRuneResponse struct {
+	Burned       *big.Int   `json:"burned"`
+	Divisibility int        `json:"divisibility"`
+	Etching      string     `json:"etching"`
+	Mint         *MintEntry `json:"mint"`
+	Mints        int64      `json:"mints"`
+	Number       int64      `json:"number"`
+	Rune         string     `json:"rune"`
+	Spacers      int64      `json:"spacers"`
+	Supply       *big.Int   `json:"supply"`
+	Symbol       string     `json:"symbol"`
+	Timestamp    time.Time  `json:"timestamp"`
+}
+
+type MintEntry struct {
+	Deadline int64 `json:"deadline"`
+	End      int64 `json:"end"`
+	Limit    int64 `json:"limit"`
+}
+
+type OrdTx struct {
+	TxId   string           `json:"txid"`
+	Events []*OrdBlockEvent `json:"events"`
+}
+
+type OrdBlockEvent struct {
+	Type        string `json:"type"`
+	Tick        string `json:"tick"`
+	RuneId      string `json:"rune_id"`
+	OldSatpoint string `json:"oldSatpoint"`
+	NewSatpoint string `json:"newSatpoint"`
+	Amount      string `json:"amount"`
+	From        string `json:"from"`
+	To          string `json:"to"`
+	Valid       bool   `json:"valid"`
+	Msg         string `json:"msg"`
 }
 
 type RpcOrdTx struct {

@@ -24,6 +24,7 @@ package btc
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/uxuycom/indexer/client/xycommon"
 	"github.com/uxuycom/indexer/utils"
@@ -60,30 +61,105 @@ func (o *OrdinalsClient) BlockNumber(ctx context.Context) (number int64, err err
 	return strconv.ParseInt(blockHeight, 10, 64)
 }
 
-func (o *OrdinalsClient) GetTransactionByTxId(ctx context.Context, txId string) (tx xycommon.RpcOrdTxResponse, err error) {
+func (o *OrdinalsClient) GetTransactionByTxId(ctx context.Context, txId string) (*xycommon.RpcOrdTxResponse, error) {
 
 	path := fmt.Sprintf("tx/%s", txId)
 	apiUrl := fmt.Sprintf("%s/%s", o.endpoint, strings.TrimLeft(path, "/"))
 
-	tx = xycommon.RpcOrdTxResponse{}
-	err = o.client.CallContext(ctx, "GET", apiUrl, &tx)
+	tx := xycommon.RpcOrdTxResponse{}
+	err := o.client.CallContext(ctx, "GET", apiUrl, &tx)
 	if err != nil {
 		xylog.Logger.Errorf("OrdinalsClient GetTransactionByTxId func error,err=%v", err)
-		return tx, err
+		return &tx, err
 	}
-	return tx, nil
+	return &tx, nil
 }
 
-func (o *OrdinalsClient) GetOutput(ctx context.Context, output string) (out xycommon.RpcOrdOutputResponse, err error) {
+func (o *OrdinalsClient) GetOutput(ctx context.Context, output string) (*xycommon.RpcOrdOutputResponse, error) {
 
 	path := fmt.Sprintf("output/%s", output)
 	apiUrl := fmt.Sprintf("%s/%s", o.endpoint, strings.TrimLeft(path, "/"))
 
-	out = xycommon.RpcOrdOutputResponse{}
-	err = o.client.CallContext(ctx, "GET", apiUrl, &out)
+	out := xycommon.RpcOrdOutputResponse{}
+	err := o.client.CallContext(ctx, "GET", apiUrl, &out)
 	if err != nil {
 		xylog.Logger.Errorf("OrdinalsClient GetOutput func error,err=%v", err)
-		return out, err
+		return &out, err
 	}
-	return out, nil
+	return &out, nil
+}
+
+func (o *OrdinalsClient) GetRune(ctx context.Context, runId string) (*xycommon.RpcOrdRuneResponse, error) {
+
+	path := fmt.Sprintf("rune/%s", runId)
+	apiUrl := fmt.Sprintf("%s/%s", o.endpoint, strings.TrimLeft(path, "/"))
+
+	rsp := xycommon.RpcOrdRuneResponse{}
+	err := o.client.CallContext(ctx, "GET", apiUrl, &rsp)
+	if err != nil {
+		xylog.Logger.Errorf("OrdinalsClient GetOutput func error,err=%v", err)
+		return &rsp, err
+	}
+	return &rsp, nil
+}
+
+func (o *OrdinalsClient) GetTxEvents(ctx context.Context, txIds []string) ([]*xycommon.OrdTx, error) {
+
+	if len(txIds) <= 0 {
+		return nil, errors.New("txIds is empty")
+	}
+
+	txs := make([]*xycommon.OrdTx, 0)
+	for _, txId := range txIds {
+
+		txRsp, err := o.GetTransactionByTxId(ctx, txId)
+		if err != nil {
+			xylog.Logger.Errorf("OrdinalsClient GetTxEvents func error,err=%v, txId =%v", err, txId)
+			continue
+		}
+		if txRsp == nil {
+			continue
+		}
+
+		previousOutput := txRsp.Transaction.TxIn[0].PreviousOutPoint
+		outFrom, err := o.GetOutput(ctx, previousOutput)
+		if err != nil {
+			xylog.Logger.Errorf("OrdinalsClient GetOutput func error,err=%v, previousOutput =%v", err, previousOutput)
+			continue
+		}
+		addressFrom := outFrom.Address
+
+		outTo, err := o.GetOutput(ctx, txId+":0")
+		if err != nil {
+			xylog.Logger.Errorf("OrdinalsClient GetOutput func error,err=%v, output =%v", err, txId+":0")
+		}
+		runes := outTo.Runes
+
+		events := make([]*xycommon.OrdBlockEvent, 0)
+		if len(runes) > 0 {
+			for _, runeId := range runes {
+
+				event := &xycommon.OrdBlockEvent{
+					RuneId:      runeId,
+					From:        addressFrom,
+					To:          outTo.Address,
+					Type:        "",    // TODO
+					Tick:        "",    // TODO
+					OldSatpoint: "",    // TODO
+					NewSatpoint: "",    // TODO
+					Amount:      "",    // TODO
+					Valid:       false, // TODO
+					Msg:         "",    // TODO
+				}
+				events = append(events, event)
+			}
+		}
+		tx := &xycommon.OrdTx{
+			TxId:   txId,
+			Events: events,
+		}
+		txs = append(txs, tx)
+	}
+
+	return txs, nil
 }
