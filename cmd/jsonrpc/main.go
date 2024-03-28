@@ -74,7 +74,7 @@ func main() {
 	server.Start()
 
 	// openapi
-	jsonrpc.CreateOpenApi()
+	jsonrpc.CreateOpenApi(&cfg)
 
 	//register terminate signal
 	signalCh := make(chan os.Signal, 1)
