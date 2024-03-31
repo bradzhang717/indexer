@@ -1019,3 +1019,28 @@ func (conn *DBClient) FindFirstTxsByBlockTime(chain string, blockTime string) (*
 func (conn *DBClient) DeleteChainStatByChainAndDateHour(chain string, dateHour uint64) error {
 	return conn.SqlDB.Where("chain = ? and date_hour = ?", chain, dateHour).Delete(&model.ChainStatHour{}).Error
 }
+
+func (conn *DBClient) SaveRunes(runes []model.Runes) error {
+	if len(runes) < 1 {
+		return nil
+	}
+	for _, v := range runes {
+		var runes model.Runes
+		err := conn.SqlDB.Where("rune = ?", v.Rune).First(&runes).Error
+		if err != nil {
+			xylog.Logger.Errorf("find runnes error =%v", err)
+		}
+		if runes.Rune != "" {
+			err := conn.SqlDB.Model(&model.Runes{}).Where("rune = ?", v.Rune).Updates(&v).Error
+			if err != nil {
+				xylog.Logger.Errorf("update runes error =%v", err)
+			}
+		} else {
+			err := conn.SqlDB.Create(v).Error
+			if err != nil {
+				xylog.Logger.Errorf("insert_option err = %v rune = %v", err, v.Rune)
+			}
+		}
+	}
+	return nil
+}

@@ -24,6 +24,7 @@ package btc
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/uxuycom/indexer/client/xycommon"
@@ -89,9 +90,64 @@ func (o *OrdinalsClient) GetOutput(ctx context.Context, output string) (*xycommo
 	return &out, nil
 }
 
-func (o *OrdinalsClient) GetRune(ctx context.Context, runId string) (*xycommon.RpcOrdRuneResponse, error) {
+func (o *OrdinalsClient) GetRune(ctx context.Context, rune string) (*xycommon.RpcOrdRuneResponse, error) {
 
-	path := fmt.Sprintf("rune/%s", runId)
+	path := fmt.Sprintf("rune/%s", rune)
+	apiUrl := fmt.Sprintf("%s/%s", o.endpoint, strings.TrimLeft(path, "/"))
+
+	rsp := xycommon.RpcOrdRuneResponse{}
+	err := o.client.CallContext(ctx, "GET", apiUrl, &rsp)
+	if err != nil {
+		xylog.Logger.Errorf("OrdinalsClient GetOutput func error,err=%v", err)
+		return &rsp, err
+	}
+	return &rsp, nil
+}
+
+func (o *OrdinalsClient) GetRunes(ctx context.Context) ([]xycommon.RpcOrdRunes, error) {
+
+	path := fmt.Sprintf("runes")
+	apiUrl := fmt.Sprintf("%s/%s", o.endpoint, strings.TrimLeft(path, "/"))
+
+	var rsp *xycommon.RpcOrdRuneResponse
+	err := o.client.CallContext(ctx, "GET", apiUrl, &rsp)
+	if err != nil {
+		xylog.Logger.Errorf("OrdinalsClient GetOutput func error,err=%v", err)
+		return nil, err
+	}
+
+	allRunes := make([]xycommon.RpcOrdRunes, 0)
+	for _, entry := range rsp.Entries {
+		runId := entry[0].(string)
+		if len(runId) < 0 {
+			continue
+		}
+
+		splitId := strings.Split(runId, ":")
+		blockHeight := splitId[0]
+		index := splitId[1]
+
+		entryData, _ := json.Marshal(entry[1])
+		var runes xycommon.RpcOrdRunes
+		if err := json.Unmarshal(entryData, &runes); err != nil {
+			xylog.Logger.Errorf("Error parsing entry detail=%v", err)
+			continue
+		}
+
+		if num, err := strconv.ParseInt(blockHeight, 10, 64); err == nil {
+			runes.BlockHeight = num
+		}
+		if idx, err := strconv.ParseInt(index, 10, 64); err == nil {
+			runes.Index = idx
+		}
+		allRunes = append(allRunes, runes)
+	}
+	return allRunes, nil
+}
+
+func (o *OrdinalsClient) GetRunesBalances(ctx context.Context) (*xycommon.RpcOrdRuneResponse, error) {
+
+	path := fmt.Sprintf("runes/balances")
 	apiUrl := fmt.Sprintf("%s/%s", o.endpoint, strings.TrimLeft(path, "/"))
 
 	rsp := xycommon.RpcOrdRuneResponse{}
@@ -140,16 +196,14 @@ func (o *OrdinalsClient) GetTxEvents(ctx context.Context, txIds []string) ([]*xy
 			for _, runeId := range runes {
 
 				event := &xycommon.OrdBlockEvent{
-					RuneId:      runeId,
-					From:        addressFrom,
-					To:          outTo.Address,
-					Type:        "",    // TODO
-					Tick:        "",    // TODO
-					OldSatpoint: "",    // TODO
-					NewSatpoint: "",    // TODO
-					Amount:      "",    // TODO
-					Valid:       false, // TODO
-					Msg:         "",    // TODO
+					RuneId: runeId,
+					From:   addressFrom,
+					To:     outTo.Address,
+					Type:   "",    // TODO
+					Tick:   "",    // TODO
+					Amount: "",    // TODO
+					Valid:  false, // TODO
+					Msg:    "",    // TODO
 				}
 				events = append(events, event)
 			}

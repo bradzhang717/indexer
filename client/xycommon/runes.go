@@ -24,7 +24,6 @@ package xycommon
 
 import (
 	"math/big"
-	"time"
 )
 
 type RpcOrdTxResponse struct {
@@ -48,6 +47,12 @@ type RpcOrdOutputResponse struct {
 }
 
 type RpcOrdRuneResponse struct {
+	Entries [][]interface{} `json:"entries"`
+}
+
+type RpcOrdRunes struct {
+	BlockHeight  int64      `json:"block_height"`
+	Index        int64      `json:"index"`
 	Burned       *big.Int   `json:"burned"`
 	Divisibility int        `json:"divisibility"`
 	Etching      string     `json:"etching"`
@@ -58,7 +63,7 @@ type RpcOrdRuneResponse struct {
 	Spacers      int64      `json:"spacers"`
 	Supply       *big.Int   `json:"supply"`
 	Symbol       string     `json:"symbol"`
-	Timestamp    time.Time  `json:"timestamp"`
+	Timestamp    int64      `json:"timestamp"`
 }
 
 type MintEntry struct {
@@ -73,16 +78,14 @@ type OrdTx struct {
 }
 
 type OrdBlockEvent struct {
-	Type        string `json:"type"`
-	Tick        string `json:"tick"`
-	RuneId      string `json:"rune_id"`
-	OldSatpoint string `json:"oldSatpoint"`
-	NewSatpoint string `json:"newSatpoint"`
-	Amount      string `json:"amount"`
-	From        string `json:"from"`
-	To          string `json:"to"`
-	Valid       bool   `json:"valid"`
-	Msg         string `json:"msg"`
+	Type   string `json:"type"`
+	Tick   string `json:"tick"`
+	RuneId string `json:"rune_id"`
+	Amount string `json:"amount"`
+	From   string `json:"from"`
+	To     string `json:"to"`
+	Valid  bool   `json:"valid"`
+	Msg    string `json:"msg"`
 }
 
 type RpcOrdTx struct {

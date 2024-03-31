@@ -54,36 +54,129 @@ func (e *Explorer) handleRunesTxs(block *xycommon.RpcBlock) *xyerrors.InsError {
 	xylog.Logger.Infof("getAddressBalanceFromBlock use time[%v] block[%v]", time.Since(startTime), block.Number)
 
 	startRangTxTime := time.Now()
-	for _, tx := range block.Txs {
+	for _, tx := range block.OrdTx {
 
-		idx, ok := txIdx[tx.Txid]
-		btcTx, _ := btcTxs[tx.Txid]
+		idx, ok := txIdx[tx.TxId]
+		btcTx, _ := btcTxs[tx.TxId]
 		if !ok {
-			xylog.Logger.Errorf("the transaction does not exist on the block for the original node. txid[%s]", tx.Txid)
+			xylog.Logger.Errorf("the transaction does not exist on the block for the original node. txid[%s]", tx.TxId)
 			return xyerrors.ErrInternal
 		}
 		for _, event := range tx.Events {
 			if !event.Valid {
 				continue
 			}
-			if event.From.Address == "" || event.To.Address == "" {
-				xylog.Logger.Infof("the from or to address is empty and the transaction is skipped. txid[%s] blockHash[%s]", tx.Txid, block.Hash)
+			if event.From == "" || event.To == "" {
+				xylog.Logger.Infof("the from or to address is empty and the transaction is skipped. txid[%s] blockHash[%s]", tx.TxId, block.Hash)
 				continue
 			}
-			xylog.Logger.Infof("binding transaction data. txid[%s] block[%d]", tx.Txid, block.Number)
-			dm, err := e.buildModel(tx.Txid, event, idx, btcTx, block, addressBalances)
+			xylog.Logger.Infof("binding transaction data. txid[%s] block[%d]", tx.TxId, block.Number)
+			dm, err := e.buildRunesModel(tx.TxId, event, idx, btcTx, block, addressBalances)
 			if err != nil {
 				xylog.Logger.Errorf("handleTxs error. err[%s]", err)
 				return xyerrors.ErrInternal
 			}
 			blockTxs = append(blockTxs, dm)
-			xylog.Logger.Infof("binding transaction data end. txid[%s] block[%d]", tx.Txid, block.Number)
+			xylog.Logger.Infof("binding transaction data end. txid[%s] block[%d]", tx.TxId, block.Number)
 		}
 	}
 
 	xylog.Logger.Infof("handleTxs  end. block[%d] use time[%v]", block.Number, time.Since(startRangTxTime))
 	e.writeDBAsync(block, blockTxs)
 	return nil
+}
+
+func (e *Explorer) buildRunesModel(txid string, event *xycommon.OrdBlockEvent, idx int, btcTx btcjson.TxRawResult, block *xycommon.RpcBlock, addressBalances map[string]*xycommon.AddressBalance) (*devents.DBModelEvent, error) {
+
+	//fromOK, _ := e.dCache.Balance.Get(defaultProtocol, event.Tick, event.From)
+	//toOK, _ := e.dCache.Balance.Get(defaultProtocol, event.Tick, event.To)
+	//amount, _ := e.convertAmount(event.Amount, event.Tick)
+	//xylog.Logger.Infof("buildModel txid[%s]", txid)
+	//
+	//startTime := time.Now()
+	//if event.Type == "deploy" {
+	//
+	//	xylog.Logger.Infof("buildModel - deploy- GetInscription txid[%s]", txid)
+	//	ins, err := e.GetInscription(event.InscriptionId)
+	//	xylog.Logger.Infof("buildModel GetInscription end txid[%s]", txid)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	e.updateDeployCache(event.Tick, ins.LimitPerMint, ins.TotalSupply, defaultTickDecimals)
+	//	xylog.Logger.Infof("buildModel- deploy- updateDeployCache end txid[%s]", txid)
+	//} else if event.Type == "mint" {
+	//
+	//	xylog.Logger.Infof("buildModel- mint- updateMintCache end txid[%s]", txid)
+	//	e.updateMintCache(event.Tick, amount, event.To.Address)
+	//	xylog.Logger.Infof("buildModel- mint- updateMintCache end txid[%s]", txid)
+	//
+	//} else if event.Type == "transfer" {
+	//	xylog.Logger.Infof("buildModel- transfer- updateTransferCache end txid[%s]", txid)
+	//	e.updateTransferCache(event.Tick, event.From.Address, event.To.Address, amount)
+	//	xylog.Logger.Infof("buildModel- transfer- updateTransferCache end txid[%s]", txid)
+	//
+	//} else if event.Type == "inscribeTransfer" {
+	//	xylog.Logger.Infof("buildModel- inscribeTransfer- updateInscribeTransferCache end txid[%s]", txid)
+	//	e.updateInscribeTransferCache(event.Tick, event.To.Address, txid, event.InscriptionId, amount)
+	//	xylog.Logger.Infof("buildModel- inscribeTransfer- updateInscribeTransferCache end txid[%s]", txid)
+	//
+	//}
+	//xylog.Logger.Infof("buildModel- buildTx- begin txid[%s] updateCacheUseTime[%v] block[%v]", txid, time.Since(startTime), block.Number)
+	//buildTxStartTime := time.Now()
+	//tx, err := e.buildTx(txid, event, idx, btcTx, block)
+	//if err != nil {
+	//	xylog.Logger.Infof("buildModel- buildTx- err txid[%s], err[%v]", txid, err)
+	//	return nil, err
+	//}
+	//
+	//buildInscriptionStartTime := time.Now()
+	//xylog.Logger.Infof("buildModel- buildInscription- begin txid[%s] buildTxUseTime[%v]", txid, time.Since(buildTxStartTime))
+	//inscription, err := e.buildInscription(txid, event, block)
+	//if err != nil {
+	//	xylog.Logger.Infof("buildModel- buildInscription- err txid[%s],err[%v]", txid, err)
+	//	return nil, err
+	//}
+	//
+	//buildInscriptionStatsStartTime := time.Now()
+	//xylog.Logger.Infof("buildModel- buildInscriptionStats- begin txid[%s] buildInscriptionStartTime[%v] block[%v]", txid, time.Since(buildInscriptionStartTime), block.Number)
+	//inscriptionStats, err := e.buildInscriptionStats(event, block)
+	//if err != nil {
+	//	xylog.Logger.Infof("buildModel- buildInscriptionStats- err txid[%s] err[%v]", txid, err)
+	//	return nil, err
+	//}
+	//
+	//xylog.Logger.Infof("buildModel- buildBalance- begin txid[%s] buildInscriptionStatsStartTime[%v] block[%v]", txid, time.Since(buildInscriptionStatsStartTime), block.Number)
+	//txns, balances, err := e.buildBalance(txid, event, block, fromOK, toOK, addressBalances)
+	//if err != nil {
+	//	xylog.Logger.Infof("buildModel- buildBalance- err txid[%s], err[%v]", txid, err)
+	//	return nil, err
+	//}
+	//
+	//xylog.Logger.Infof("buildModel- buildAddressTx- begin txid[%s]", txid)
+	//addressTxs, err := e.buildAddressTx(txid, event, block)
+	//if err != nil {
+	//	xylog.Logger.Infof("buildModel- buildAddressTx- err txid[%s],err[%v]", txid, err)
+	//	return nil, err
+	//}
+	//
+	//xylog.Logger.Infof("buildModel- buildUTXO- begin txid[%s]", txid)
+	//utxos, err := e.buildUTXO(event, block)
+	//if err != nil {
+	//	xylog.Logger.Infof("buildModel- buildUTXO- err txid[%s] err[%v]", txid, err)
+	//	return nil, err
+	//}
+	//
+	//xylog.Logger.Infof("buildModel- end txid[%s], err[%v] useTime[%v] block[%v]", txid, err, time.Since(startTime), block.Number)
+	//return &devents.DBModelEvent{
+	//	Tx:               tx,
+	//	Inscriptions:     inscription,
+	//	InscriptionStats: inscriptionStats,
+	//	BalanceTxs:       txns,
+	//	Balances:         balances,
+	//	AddressTxs:       addressTxs,
+	//	UTXOs:            utxos,
+	//}, nil
+	return nil, nil
 }
 
 func (e *Explorer) getRunesAddressBalanceFromBlock(txs []*xycommon.Tx, txIdx map[string]int, blockNumber int64) (map[string]*xycommon.AddressBalance, error) {

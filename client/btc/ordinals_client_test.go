@@ -74,3 +74,18 @@ func Test_GetOutput(t *testing.T) {
 	}
 	t.Logf("Test_BlockNumber number =%v", rsp)
 }
+
+func Test_GetRunes(t *testing.T) {
+
+	if lv, err := logrus.ParseLevel("debug"); err == nil {
+		xylog.InitLog(lv, "")
+	}
+
+	ordinalsClient := NewOrdinalsClient(endpoint)
+	rsp, err := ordinalsClient.GetRunes(context.Background())
+	if err != nil {
+		t.Logf("test Test_GetRunes error =%v", err)
+	}
+	t.Logf("Test_GetRunes number =%v", rsp)
+
+}

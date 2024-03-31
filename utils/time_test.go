@@ -23,6 +23,11 @@
 package utils
 
 import (
+	"bytes"
+	"encoding/binary"
+	"encoding/hex"
+	"fmt"
+	"github.com/btcsuite/btcd/txscript"
 	"testing"
 	"time"
 )
@@ -72,5 +77,52 @@ func Test_TimeFormatHourBeginAndEnd(t *testing.T) {
 		s, e := TimeFormatHourBeginAndEnd(int(value))
 		t.Logf("begin: %v, end:=%v", s, e)
 	}
+
+}
+
+func Test_TimeHash(t *testing.T) {
+
+	// Example input
+	input := "7397969152f26e7dc46c6236a048cdb8ed105910b4540114325c4b984a091b91"
+	reversed, err := reverseBytes(input)
+	if err != nil {
+		fmt.Println("Error reversing bytes:", err)
+		return
+	}
+	fmt.Printf("Input: N = 0x%s\nOutput: 0x%s\n", input, reversed)
+
+	// Your integer value
+	var myInt int8 = 3
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.BigEndian, myInt)
+	// Convert the bytes.Buffer to a []byte
+	byteSlice := buf.Bytes()
+	// Print the resulting []byte
+	//fmt.Println(byteSlice)
+
+	builder := txscript.NewScriptBuilder()
+	builder.AddData(byteSlice)
+	ret, _ := builder.Script()
+	fmt.Println(hex.EncodeToString(ret))
+
+	fmt.Println(string([]byte("␃")))
+}
+
+// reverseBytes takes a hex string representing a large number and returns its byte-reversed hex string
+func reverseBytes(hexStr string) (string, error) {
+	// Decode the hex string to bytes
+	data, err := hex.DecodeString(hexStr)
+	if err != nil {
+		return "", err
+	}
+
+	//fmt.Printf("Middile:0x%s\n", string(data))
+
+	// Reverse the bytes
+	for i, j := 0, len(data)-1; i < j; i, j = i+1, j-1 {
+		data[i], data[j] = data[j], data[i]
+	}
+	// Encode the bytes back to hex string and return
+	return hex.EncodeToString(data), nil
 
 }
