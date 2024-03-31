@@ -89,3 +89,18 @@ func Test_GetRunes(t *testing.T) {
 	t.Logf("Test_GetRunes number =%v", rsp)
 
 }
+
+func Test_GetRune(t *testing.T) {
+
+	if lv, err := logrus.ParseLevel("debug"); err == nil {
+		xylog.InitLog(lv, "")
+	}
+	runes := "IIIIJJGFDGGB"
+	ordinalsClient := NewOrdinalsClient(endpoint)
+	rsp, err := ordinalsClient.GetRune(context.Background(), runes)
+	if err != nil {
+		t.Logf("test Test_GetRunes error =%v", err)
+	}
+	t.Logf("Test_GetRunes number =%v", rsp)
+
+}

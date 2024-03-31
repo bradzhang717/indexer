@@ -28,6 +28,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/uxuycom/indexer/client/xycommon"
+	"github.com/uxuycom/indexer/model"
 	"github.com/uxuycom/indexer/utils"
 	"github.com/uxuycom/indexer/xylog"
 	"strconv"
@@ -90,18 +91,27 @@ func (o *OrdinalsClient) GetOutput(ctx context.Context, output string) (*xycommo
 	return &out, nil
 }
 
-func (o *OrdinalsClient) GetRune(ctx context.Context, rune string) (*xycommon.RpcOrdRuneResponse, error) {
+func (o *OrdinalsClient) GetRune(ctx context.Context, rune string) (*xycommon.RpcOrdRunes, error) {
 
 	path := fmt.Sprintf("rune/%s", rune)
 	apiUrl := fmt.Sprintf("%s/%s", o.endpoint, strings.TrimLeft(path, "/"))
 
-	rsp := xycommon.RpcOrdRuneResponse{}
+	var rsp *xycommon.RpcOrdRuneResponse
 	err := o.client.CallContext(ctx, "GET", apiUrl, &rsp)
 	if err != nil {
 		xylog.Logger.Errorf("OrdinalsClient GetOutput func error,err=%v", err)
-		return &rsp, err
+		return nil, err
 	}
-	return &rsp, nil
+	splitId := strings.Split(rsp.Id, ":")
+	blockHeight := splitId[0]
+	index := splitId[1]
+	if num, err := strconv.ParseInt(blockHeight, 10, 64); err == nil {
+		rsp.Entry.BlockHeight = num
+	}
+	if idx, err := strconv.ParseInt(index, 10, 64); err == nil {
+		rsp.Entry.Index = idx
+	}
+	return rsp.Entry, nil
 }
 
 func (o *OrdinalsClient) GetRunes(ctx context.Context) ([]xycommon.RpcOrdRunes, error) {
@@ -109,7 +119,7 @@ func (o *OrdinalsClient) GetRunes(ctx context.Context) ([]xycommon.RpcOrdRunes, 
 	path := fmt.Sprintf("runes")
 	apiUrl := fmt.Sprintf("%s/%s", o.endpoint, strings.TrimLeft(path, "/"))
 
-	var rsp *xycommon.RpcOrdRuneResponse
+	var rsp *xycommon.RpcOrdRunesResponse
 	err := o.client.CallContext(ctx, "GET", apiUrl, &rsp)
 	if err != nil {
 		xylog.Logger.Errorf("OrdinalsClient GetOutput func error,err=%v", err)
@@ -144,6 +154,42 @@ func (o *OrdinalsClient) GetRunes(ctx context.Context) ([]xycommon.RpcOrdRunes, 
 		allRunes = append(allRunes, runes)
 	}
 	return allRunes, nil
+}
+
+func (o *OrdinalsClient) SaveRunesToDb(ctx context.Context) error {
+
+	runes, err := o.GetRunes(ctx)
+	if err != nil {
+		xylog.Logger.Errorf("OrdinalsClient GetRunes func error,err=%v", err)
+		return err
+	}
+	dbRunes := make([]model.Runes, 0)
+	for _, r := range runes {
+
+		ru := model.Runes{
+			BlockHeight:  r.BlockHeight,
+			Index:        r.Index,
+			Burned:       r.Burned,
+			Divisibility: r.Divisibility,
+			Etching:      r.Etching,
+			Mints:        r.Mints,
+			Number:       r.Number,
+			Rune:         r.Rune,
+			Spacers:      r.Spacers,
+			Supply:       r.Supply,
+			Symbol:       r.Symbol,
+			Timestamp:    r.Timestamp,
+		}
+		if r.Mint != nil {
+			ru.Deadline = r.Mint.Deadline
+			ru.End = r.Mint.End
+			ru.Limit = r.Mint.Limit
+		}
+		dbRunes = append(dbRunes, ru)
+
+	}
+	//dbClient.SaveRunes(dbRunes) // TODO
+	return nil
 }
 
 func (o *OrdinalsClient) GetRunesBalances(ctx context.Context) (*xycommon.RpcOrdRuneResponse, error) {
