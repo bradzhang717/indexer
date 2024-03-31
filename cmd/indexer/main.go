@@ -28,10 +28,12 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/uxuycom/indexer/client"
+	"github.com/uxuycom/indexer/client/btc"
 	"github.com/uxuycom/indexer/config"
 	"github.com/uxuycom/indexer/dcache"
 	"github.com/uxuycom/indexer/devents"
 	"github.com/uxuycom/indexer/explorer"
+	"github.com/uxuycom/indexer/model"
 	"github.com/uxuycom/indexer/protocol"
 	"github.com/uxuycom/indexer/storage"
 	"github.com/uxuycom/indexer/task"
@@ -102,6 +104,36 @@ func main() {
 	go exp.Scan()
 	go exp.Index()
 	go exp.FlushDB()
+
+	var endpoint = "http://47.128.183.199:8081"
+	ordinalsClient := btc.NewOrdinalsClient(endpoint)
+	runes, _ := ordinalsClient.GetRunes(context.Background())
+	dbrunes := make([]model.Runes, 0)
+	for _, r := range runes {
+
+		ru := model.Runes{
+			BlockHeight:  r.BlockHeight,
+			Index:        r.Index,
+			Burned:       r.Burned,
+			Divisibility: r.Divisibility,
+			Etching:      r.Etching,
+			Mints:        r.Mints,
+			Number:       r.Number,
+			Rune:         r.Rune,
+			Spacers:      r.Spacers,
+			Supply:       r.Supply,
+			Symbol:       r.Symbol,
+			Timestamp:    r.Timestamp,
+		}
+		if r.Mint != nil {
+			ru.Deadline = r.Mint.Deadline
+			ru.End = r.Mint.End
+			//ru.Limit = r.Mint.Limit
+		}
+		dbrunes = append(dbrunes, ru)
+
+	}
+	dbClient.SaveRunes(dbrunes)
 
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit

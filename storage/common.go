@@ -1026,7 +1026,7 @@ func (conn *DBClient) SaveRunes(runes []model.Runes) error {
 	}
 	for _, v := range runes {
 		var runes model.Runes
-		err := conn.SqlDB.Where("rune = ?", v.Rune).First(&runes).Error
+		err := conn.SqlDB.Where("rune = ?", v.Rune).Find(&runes).Error
 		if err != nil {
 			xylog.Logger.Errorf("find runnes error =%v", err)
 		}
@@ -1036,9 +1036,9 @@ func (conn *DBClient) SaveRunes(runes []model.Runes) error {
 				xylog.Logger.Errorf("update runes error =%v", err)
 			}
 		} else {
-			err := conn.SqlDB.Create(v).Error
+			err := conn.SqlDB.Create(&v).Error
 			if err != nil {
-				xylog.Logger.Errorf("insert_option err = %v rune = %v", err, v.Rune)
+				xylog.Logger.Errorf("insert_option err = %v runes = %v", err, v.Rune)
 			}
 		}
 	}

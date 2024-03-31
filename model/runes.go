@@ -23,27 +23,26 @@
 package model
 
 import (
-	"math/big"
-	"time"
+	"github.com/shopspring/decimal"
 )
 
 type Runes struct {
-	Id           int64     `gorm:"primaryKey" json:"id"` // ID
-	Burned       *big.Int  `gorm:"burned" json:"burned"`
-	Divisibility int       `gorm:"divisibility" json:"divisibility"`
-	Etching      string    `gorm:"etching" json:"etching"`
-	Mints        int64     `gorm:"mints" json:"mints"`
-	Number       int64     `gorm:"number" json:"number"`
-	Rune         string    `gorm:"rune" json:"rune"`
-	Spacers      int64     `gorm:"spacers" json:"spacers"`
-	Supply       *big.Int  `gorm:"supply" json:"supply"`
-	Symbol       string    `gorm:"symbol" json:"symbol"`
-	Deadline     int64     `gorm:"deadline" json:"deadline"` // mint deadline
-	End          int64     `gorm:"end" json:"end"`           // mint end
-	Limit        int64     `gorm:"limit" json:"limit"`       // mint limit
-	BlockHeight  int64     `gorm:"block_height" json:"block_height"`
-	Index        int64     `gorm:"index" json:"index"`
-	Timestamp    time.Time `gorm:"burned" json:"timestamp"`
+	Id           int64           `gorm:"primaryKey" json:"id"` // ID
+	Burned       decimal.Decimal `gorm:"burned" json:"burned"`
+	Divisibility int             `gorm:"divisibility" json:"divisibility"`
+	Etching      string          `gorm:"etching" json:"etching"`
+	Mints        int64           `gorm:"mints" json:"mints"`
+	Number       int64           `gorm:"number" json:"number"`
+	Rune         string          `gorm:"rune" json:"rune"`
+	Spacers      int64           `gorm:"spacers" json:"spacers"`
+	Supply       decimal.Decimal `gorm:"supply" json:"supply"`
+	Symbol       string          `gorm:"symbol" json:"symbol"`
+	Deadline     int64           `gorm:"deadline" json:"deadline"` // mint deadline
+	End          int64           `gorm:"end" json:"end"`           // mint end
+	Limit        decimal.Decimal `gorm:"limit" json:"limit"`       // mint limit
+	BlockHeight  int64           `gorm:"block_height" json:"block_height"`
+	Index        int64           `gorm:"index" json:"index"`
+	Timestamp    int64           `gorm:"burned" json:"timestamp"`
 }
 
 func (Runes) TableName() string {

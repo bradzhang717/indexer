@@ -23,6 +23,7 @@
 package xycommon
 
 import (
+	"github.com/shopspring/decimal"
 	"math/big"
 )
 
@@ -51,25 +52,27 @@ type RpcOrdRuneResponse struct {
 }
 
 type RpcOrdRunes struct {
-	BlockHeight  int64      `json:"block_height"`
-	Index        int64      `json:"index"`
-	Burned       *big.Int   `json:"burned"`
-	Divisibility int        `json:"divisibility"`
-	Etching      string     `json:"etching"`
-	Mint         *MintEntry `json:"mint"`
-	Mints        int64      `json:"mints"`
-	Number       int64      `json:"number"`
-	Rune         string     `json:"rune"`
-	Spacers      int64      `json:"spacers"`
-	Supply       *big.Int   `json:"supply"`
-	Symbol       string     `json:"symbol"`
-	Timestamp    int64      `json:"timestamp"`
+	BlockHeight int64 `json:"block_height"`
+	Index       int64 `json:"index"`
+	//BurnedRaw    decimal.Decimal `json:"burned"`
+	Burned       decimal.Decimal `json:"burned"`
+	Divisibility int             `json:"divisibility"`
+	Etching      string          `json:"etching"`
+	Mint         *MintEntry      `json:"mint"`
+	Mints        int64           `json:"mints"`
+	Number       int64           `json:"number"`
+	Rune         string          `json:"rune"`
+	Spacers      int64           `json:"spacers"`
+	//SupplyRaw    decimal.Decimal `json:"supply"`
+	Supply    decimal.Decimal `json:"supply"`
+	Symbol    string          `json:"symbol"`
+	Timestamp int64           `json:"timestamp"`
 }
 
 type MintEntry struct {
-	Deadline int64 `json:"deadline"`
-	End      int64 `json:"end"`
-	Limit    int64 `json:"limit"`
+	Deadline int64    `json:"deadline"`
+	End      int64    `json:"end"`
+	Limit    *big.Int `json:"limit"`
 }
 
 type OrdTx struct {

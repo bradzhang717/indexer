@@ -129,6 +129,7 @@ func (o *OrdinalsClient) GetRunes(ctx context.Context) ([]xycommon.RpcOrdRunes, 
 
 		entryData, _ := json.Marshal(entry[1])
 		var runes xycommon.RpcOrdRunes
+
 		if err := json.Unmarshal(entryData, &runes); err != nil {
 			xylog.Logger.Errorf("Error parsing entry detail=%v", err)
 			continue
