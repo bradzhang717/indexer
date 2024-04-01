@@ -22,5 +22,6 @@
   },
   "chain_nodes": {
     "eth": "https://eths.indexs.io"
-  }
+  },
+  "open_api_enabled": true
 }

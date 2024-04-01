@@ -23,12 +23,16 @@
 package jsonrpc
 
 import (
+	"github.com/uxuycom/indexer/config"
 	"log"
 	"net/http"
 	"os"
 )
 
-func CreateOpenApi() {
+func CreateOpenApi(config *config.RpcConfig) {
+	if config.OpenApiEnabled == false {
+		return
+	}
 	http.HandleFunc("/v1/docs/openapi.json", func(w http.ResponseWriter, r *http.Request) {
 		data, err := os.ReadFile("docs/openapi.json")
 		if err != nil {

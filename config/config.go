@@ -104,6 +104,7 @@ type RpcConfig struct {
 	RPCPass              string            `json:"rpcpass" default-mask:"-" description:"Password for RPC connections"`
 	RPCUser              string            `json:"rpcuser" description:"Username for RPC connections"`
 	ChainNodes           map[string]string `json:"chain_nodes" mapstructure:"chain_nodes"`
+	OpenApiEnabled       bool              `json:"open_api_enabled" mapstructure:"open_api_enabled"`
 }
 
 type CacheConfig struct {
