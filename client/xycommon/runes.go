@@ -35,15 +35,16 @@ type RpcOrdTxResponse struct {
 }
 
 type RpcOrdOutputResponse struct {
-	Address      string   `json:"address"`
-	Indexed      bool     `json:"indexed"`
-	Inscriptions []string `json:"inscriptions"`
-	Runes        []string `json:"runes"`
-	SatRanges    string   `json:"sat_ranges"`
-	PubKeyScript string   `json:"script_pubkey"`
-	Spent        int64    `json:"spent"`
-	TxId         string   `json:"transaction"`
-	Value        int64    `json:"value"`
+	Address      string          `json:"address"`
+	Indexed      bool            `json:"indexed"`
+	Inscriptions []string        `json:"-"`
+	Runes        [][]interface{} `json:"runes"`
+	SatRanges    string          `json:"sat_ranges"`
+	PubKeyScript string          `json:"script_pubkey"`
+	Spent        bool            `json:"spent"`
+	TxId         string          `json:"transaction"`
+	Value        int64           `json:"value"`
+	RunesBalance []*RunesBalance `json:"-"`
 }
 
 // RpcOrdRuneResponse return one
@@ -78,6 +79,13 @@ type MintEntry struct {
 	Deadline int64           `json:"deadline"`
 	End      int64           `json:"end"`
 	Limit    decimal.Decimal `json:"limit"`
+}
+
+type RunesBalance struct {
+	Rune         string          `json:"rune"`
+	Amount       decimal.Decimal `json:"amount"`
+	Divisibility decimal.Decimal `json:"divisibility"`
+	Symbol       string          `json:"symbol"`
 }
 
 type OrdTx struct {

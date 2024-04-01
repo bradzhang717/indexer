@@ -25,10 +25,9 @@ package btc
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"github.com/shopspring/decimal"
 	"github.com/uxuycom/indexer/client/xycommon"
-	"github.com/uxuycom/indexer/model"
 	"github.com/uxuycom/indexer/utils"
 	"github.com/uxuycom/indexer/xylog"
 	"strconv"
@@ -82,13 +81,33 @@ func (o *OrdinalsClient) GetOutput(ctx context.Context, output string) (*xycommo
 	path := fmt.Sprintf("output/%s", output)
 	apiUrl := fmt.Sprintf("%s/%s", o.endpoint, strings.TrimLeft(path, "/"))
 
-	out := xycommon.RpcOrdOutputResponse{}
-	err := o.client.CallContext(ctx, "GET", apiUrl, &out)
+	var rsp xycommon.RpcOrdOutputResponse
+	err := o.client.CallContext(ctx, "GET", apiUrl, &rsp)
 	if err != nil {
 		xylog.Logger.Errorf("OrdinalsClient GetOutput func error,err=%v", err)
-		return &out, err
+		return &rsp, err
 	}
-	return &out, nil
+
+	runesBalances := make([]*xycommon.RunesBalance, 0)
+	if len(rsp.Runes) > 0 {
+		for _, r := range rsp.Runes {
+
+			re := r[0].(string)
+			amount := r[1].(map[string]interface{})["amount"].(float64)
+			divisibility := r[1].(map[string]interface{})["divisibility"].(float64)
+			symbol := r[1].(map[string]interface{})["symbol"].(string)
+			rb := xycommon.RunesBalance{
+				Rune:         re,
+				Amount:       decimal.NewFromFloat(amount),
+				Divisibility: decimal.NewFromFloat(divisibility),
+				Symbol:       symbol,
+			}
+			runesBalances = append(runesBalances, &rb)
+			xylog.Logger.Infof("rune=%v,amount =%v,divisibility=%v symbol=%v", re, amount, divisibility, symbol)
+		}
+		rsp.RunesBalance = runesBalances
+	}
+	return &rsp, nil
 }
 
 func (o *OrdinalsClient) GetRune(ctx context.Context, rune string) (*xycommon.RpcOrdRunes, error) {
@@ -156,111 +175,77 @@ func (o *OrdinalsClient) GetRunes(ctx context.Context) ([]xycommon.RpcOrdRunes, 
 	return allRunes, nil
 }
 
-func (o *OrdinalsClient) SaveRunesToDb(ctx context.Context) error {
-
-	runes, err := o.GetRunes(ctx)
-	if err != nil {
-		xylog.Logger.Errorf("OrdinalsClient GetRunes func error,err=%v", err)
-		return err
-	}
-	dbRunes := make([]model.Runes, 0)
-	for _, r := range runes {
-
-		ru := model.Runes{
-			BlockHeight:  r.BlockHeight,
-			Index:        r.Index,
-			Burned:       r.Burned,
-			Divisibility: r.Divisibility,
-			Etching:      r.Etching,
-			Mints:        r.Mints,
-			Number:       r.Number,
-			Rune:         r.Rune,
-			Spacers:      r.Spacers,
-			Supply:       r.Supply,
-			Symbol:       r.Symbol,
-			Timestamp:    r.Timestamp,
-		}
-		if r.Mint != nil {
-			ru.Deadline = r.Mint.Deadline
-			ru.End = r.Mint.End
-			ru.Limit = r.Mint.Limit
-		}
-		dbRunes = append(dbRunes, ru)
-
-	}
-	//dbClient.SaveRunes(dbRunes) // TODO
-	return nil
-}
-
-func (o *OrdinalsClient) GetRunesBalances(ctx context.Context) (*xycommon.RpcOrdRuneResponse, error) {
+// GetRunesBalances  key :rune value: map[txId:index]amount
+func (o *OrdinalsClient) GetRunesBalances(ctx context.Context) (map[string]map[string]decimal.Decimal, error) {
 
 	path := fmt.Sprintf("runes/balances")
 	apiUrl := fmt.Sprintf("%s/%s", o.endpoint, strings.TrimLeft(path, "/"))
 
-	rsp := xycommon.RpcOrdRuneResponse{}
+	rsp := make(map[string]map[string]decimal.Decimal)
 	err := o.client.CallContext(ctx, "GET", apiUrl, &rsp)
 	if err != nil {
 		xylog.Logger.Errorf("OrdinalsClient GetOutput func error,err=%v", err)
-		return &rsp, err
+		return rsp, err
 	}
-	return &rsp, nil
+	return rsp, nil
 }
 
 func (o *OrdinalsClient) GetTxEvents(ctx context.Context, txIds []string) ([]*xycommon.OrdTx, error) {
 
-	if len(txIds) <= 0 {
-		return nil, errors.New("txIds is empty")
-	}
+	//if len(txIds) <= 0 {
+	//	return nil, errors.New("txIds is empty")
+	//}
+	//
+	//txs := make([]*xycommon.OrdTx, 0)
+	//for _, txId := range txIds {
+	//
+	//	txRsp, err := o.GetTransactionByTxId(ctx, txId)
+	//	if err != nil {
+	//		xylog.Logger.Errorf("OrdinalsClient GetTxEvents func error,err=%v, txId =%v", err, txId)
+	//		continue
+	//	}
+	//	if txRsp == nil {
+	//		continue
+	//	}
+	//
+	//	previousOutput := txRsp.Transaction.TxIn[0].PreviousOutPoint
+	//	outFrom, err := o.GetOutput(ctx, previousOutput)
+	//	if err != nil {
+	//		xylog.Logger.Errorf("OrdinalsClient GetOutput func error,err=%v, previousOutput =%v", err, previousOutput)
+	//		continue
+	//	}
+	//	addressFrom := outFrom.Address
+	//
+	//	outTo, err := o.GetOutput(ctx, txId+":0")
+	//	if err != nil {
+	//		xylog.Logger.Errorf("OrdinalsClient GetOutput func error,err=%v, output =%v", err, txId+":0")
+	//	}
+	//	//runes := outTo.Runes
+	//
+	//	events := make([]*xycommon.OrdBlockEvent, 0)
+	//	if len(runes) > 0 {
+	//		for _, runeId := range runes {
+	//
+	//			xylog.Logger.Infof("%v", runeId)
+	//			event := &xycommon.OrdBlockEvent{
+	//				//RuneId: runeId,
+	//				From:   addressFrom,
+	//				To:     outTo.Address,
+	//				Type:   "",    // TODO
+	//				Tick:   "",    // TODO
+	//				Amount: "",    // TODO
+	//				Valid:  false, // TODO
+	//				Msg:    "",    // TODO
+	//			}
+	//			events = append(events, event)
+	//		}
+	//	}
+	//	tx := &xycommon.OrdTx{
+	//		TxId:   txId,
+	//		Events: events,
+	//	}
+	//	txs = append(txs, tx)
+	//}
 
-	txs := make([]*xycommon.OrdTx, 0)
-	for _, txId := range txIds {
-
-		txRsp, err := o.GetTransactionByTxId(ctx, txId)
-		if err != nil {
-			xylog.Logger.Errorf("OrdinalsClient GetTxEvents func error,err=%v, txId =%v", err, txId)
-			continue
-		}
-		if txRsp == nil {
-			continue
-		}
-
-		previousOutput := txRsp.Transaction.TxIn[0].PreviousOutPoint
-		outFrom, err := o.GetOutput(ctx, previousOutput)
-		if err != nil {
-			xylog.Logger.Errorf("OrdinalsClient GetOutput func error,err=%v, previousOutput =%v", err, previousOutput)
-			continue
-		}
-		addressFrom := outFrom.Address
-
-		outTo, err := o.GetOutput(ctx, txId+":0")
-		if err != nil {
-			xylog.Logger.Errorf("OrdinalsClient GetOutput func error,err=%v, output =%v", err, txId+":0")
-		}
-		runes := outTo.Runes
-
-		events := make([]*xycommon.OrdBlockEvent, 0)
-		if len(runes) > 0 {
-			for _, runeId := range runes {
-
-				event := &xycommon.OrdBlockEvent{
-					RuneId: runeId,
-					From:   addressFrom,
-					To:     outTo.Address,
-					Type:   "",    // TODO
-					Tick:   "",    // TODO
-					Amount: "",    // TODO
-					Valid:  false, // TODO
-					Msg:    "",    // TODO
-				}
-				events = append(events, event)
-			}
-		}
-		tx := &xycommon.OrdTx{
-			TxId:   txId,
-			Events: events,
-		}
-		txs = append(txs, tx)
-	}
-
-	return txs, nil
+	return nil, nil
 }

@@ -117,3 +117,7 @@ func (b BClient) GetAddressBalanceByTick(ctx context.Context, address, tick stri
 func (b BClient) GetInscription(ctx context.Context, inscriptionId string) (ins *xycommon.RpcOkxInscription, err error) {
 	return b.btcClient.OrdClient.GetInscription(ctx, inscriptionId)
 }
+
+func (b BClient) GetRunes(ctx context.Context) ([]xycommon.RpcOrdRunes, error) {
+	return b.btcClient.OrdinalsClient.GetRunes(ctx)
+}

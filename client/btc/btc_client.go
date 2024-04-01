@@ -40,10 +40,11 @@ import (
 
 // BtcClient defines typed wrappers for the Ethereum RPC API.
 type BtcClient struct {
-	client      *rpcclient.Client
-	batchClient *rpcclient.Client
-	chainID     int
-	OrdClient   *OrdClient
+	client         *rpcclient.Client
+	batchClient    *rpcclient.Client
+	chainID        int
+	OrdClient      *OrdClient
+	OrdinalsClient *OrdinalsClient
 }
 
 // NewBtcClient creates a client that uses the given RPC client.
@@ -76,12 +77,15 @@ func NewBtcClient(chainCfg *config.ChainConfig) (*BtcClient, error) {
 	}
 
 	ordRpcClient := NewOrdClient(chainCfg.OrdRpc)
+	ordinalsClient := NewOrdinalsClient(chainCfg.OrdinalsRpc)
 	return &BtcClient{
-		chainID:     chainCfg.ChainId,
-		client:      client,
-		batchClient: batchClient,
-		OrdClient:   ordRpcClient,
+		chainID:        chainCfg.ChainId,
+		client:         client,
+		batchClient:    batchClient,
+		OrdClient:      ordRpcClient,
+		OrdinalsClient: ordinalsClient,
 	}, nil
+
 }
 
 // Close closes the underlying RPC connection.

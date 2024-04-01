@@ -67,7 +67,7 @@ func Test_GetOutput(t *testing.T) {
 		xylog.InitLog(lv, "")
 	}
 	ordinalsClient := NewOrdinalsClient(endpoint)
-	output := "2b2fa77ca54ad5a58d506d933dcaa2ed1efb41bf5d8b0ce82afbace399a014b1:0"
+	output := "362de1f74a7309cdda022ecb5cd94a1444acf5b05bb9107ba7eb2fd42697cff1:1"
 	rsp, err := ordinalsClient.GetOutput(context.Background(), output)
 	if err != nil {
 		t.Logf("test Test_BlockNumber error =%v", err)
@@ -91,7 +91,6 @@ func Test_GetRunes(t *testing.T) {
 }
 
 func Test_GetRune(t *testing.T) {
-
 	if lv, err := logrus.ParseLevel("debug"); err == nil {
 		xylog.InitLog(lv, "")
 	}
@@ -102,5 +101,16 @@ func Test_GetRune(t *testing.T) {
 		t.Logf("test Test_GetRunes error =%v", err)
 	}
 	t.Logf("Test_GetRunes number =%v", rsp)
+}
 
+func Test_GetRunesBalance(t *testing.T) {
+	if lv, err := logrus.ParseLevel("debug"); err == nil {
+		xylog.InitLog(lv, "")
+	}
+	ordinalsClient := NewOrdinalsClient(endpoint)
+	rsp, err := ordinalsClient.GetRunesBalances(context.Background())
+	if err != nil {
+		t.Logf("test Test_GetRunesBalance error =%v", err)
+	}
+	t.Logf("Test_GetRunesBalance number =%v", rsp)
 }

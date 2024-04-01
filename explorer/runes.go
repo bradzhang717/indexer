@@ -26,14 +26,56 @@ import (
 	"context"
 	"fmt"
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/uxuycom/indexer/client/btc"
 	"github.com/uxuycom/indexer/client/xycommon"
 	"github.com/uxuycom/indexer/devents"
+	"github.com/uxuycom/indexer/model"
 	"github.com/uxuycom/indexer/xyerrors"
 	"github.com/uxuycom/indexer/xylog"
 	"golang.org/x/sync/errgroup"
 	"sync"
 	"time"
 )
+
+func (e *Explorer) SaveRunesToDb(ctx context.Context) error {
+
+	client := e.node.(*btc.BClient)
+	runes, err := client.GetRunes(ctx)
+	if err != nil {
+		xylog.Logger.Errorf("OrdinalsClient GetRunes func error,err=%v", err)
+		return err
+	}
+	dbRunes := make([]model.Runes, 0)
+	for _, r := range runes {
+
+		ru := model.Runes{
+			BlockHeight:  r.BlockHeight,
+			Index:        r.Index,
+			Burned:       r.Burned,
+			Divisibility: r.Divisibility,
+			Etching:      r.Etching,
+			Mints:        r.Mints,
+			Number:       r.Number,
+			Rune:         r.Rune,
+			Spacers:      r.Spacers,
+			Supply:       r.Supply,
+			Symbol:       r.Symbol,
+			Timestamp:    r.Timestamp,
+		}
+		if r.Mint != nil {
+			ru.Deadline = r.Mint.Deadline
+			ru.End = r.Mint.End
+			ru.Limit = r.Mint.Limit
+		}
+		dbRunes = append(dbRunes, ru)
+
+	}
+	err = e.db.SaveRunes(dbRunes)
+	if err != nil {
+		xylog.Logger.Errorf("SaveRunes error =%v", err)
+	}
+	return nil
+}
 
 // handleRunesTxs  dispose btc txs and save to db
 func (e *Explorer) handleRunesTxs(block *xycommon.RpcBlock) *xyerrors.InsError {
