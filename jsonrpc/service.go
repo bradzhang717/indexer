@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
-	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/shopspring/decimal"
 	"github.com/uxuycom/indexer/model"
 	"github.com/uxuycom/indexer/protocol"
@@ -1010,12 +1009,7 @@ func (s *Service) GetAllChainStat(chains []string) (interface{}, error) {
 	result, _ := doRequest(string(body1), path, s.rpcServer.cfg.Config.ChainNodes)
 	// result json to map
 	xylog.Logger.Infof("GetAllChainStat result:%v", result)
-	var resultMap map[string]interface{}
-	err = json.Unmarshal([]byte(result), &resultMap)
-	if err != nil {
-		return nil, err
-	}
-	return resultMap["result"], nil
+	return result, nil
 }
 
 func (s *Service) AllSearch(keyword, chain string) (interface{}, error) {
@@ -1034,16 +1028,11 @@ func (s *Service) AllSearch(keyword, chain string) (interface{}, error) {
 	result, _ := doRequest(string(body), path, s.rpcServer.cfg.Config.ChainNodes)
 	// result json to map
 	xylog.Logger.Infof("AllSearch result:%v", result)
-	var resultMap map[string]interface{}
-	err = json.Unmarshal([]byte(result), &resultMap)
-	if err != nil {
-		return nil, err
-	}
-	return resultMap["result"], nil
+	return result, nil
 }
-func doRequest(body, path string, nodes map[string]string) (string, error) {
+func doRequest(body, path string, nodes map[string]string) ([]json.RawMessage, error) {
 	if nodes == nil {
-		return "", nil
+		return nil, nil
 	}
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -1075,11 +1064,13 @@ func doRequest(body, path string, nodes map[string]string) (string, error) {
 		}()
 	}
 	wg.Wait()
-	result := "{}"
+	var result []json.RawMessage
 	nodeResult.Range(func(k, v interface{}) bool {
 		// do merge
-		patch, _ := jsonpatch.MergePatch([]byte(result), v.([]byte))
-		result = string(patch)
+		response := Response{}
+		json.Unmarshal([]byte(v.(string)), &response)
+		i := response.Result
+		result = append(result, i)
 		return true
 	})
 	return result, nil
