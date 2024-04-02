@@ -1006,8 +1006,10 @@ func (s *Service) GetAllChainStat(chains []string) (interface{}, error) {
 		xylog.Logger.Errorf("GetAllChainStat params err=%v", err)
 	}
 
-	result, _ := doRequest(string(body1), path, s.rpcServer.cfg.Config.ChainNodes)
-	// result json to map
+	result, err := doRequest(string(body1), path, s.rpcServer.cfg.Config.ChainNodes)
+	if err != nil {
+		xylog.Logger.Error(err)
+	}
 	xylog.Logger.Infof("GetAllChainStat result:%v", result)
 	return result, nil
 }
@@ -1026,11 +1028,10 @@ func (s *Service) AllSearch(keyword, chain string) (interface{}, error) {
 		xylog.Logger.Errorf("AllSearch params err=%v", err)
 	}
 	result, _ := doRequest(string(body), path, s.rpcServer.cfg.Config.ChainNodes)
-	// result json to map
 	xylog.Logger.Infof("AllSearch result:%v", result)
 	return result, nil
 }
-func doRequest(body, path string, nodes map[string]string) ([]json.RawMessage, error) {
+func doRequest(body, path string, nodes map[string]string) (map[string]interface{}, error) {
 	if nodes == nil {
 		return nil, nil
 	}
@@ -1058,19 +1059,18 @@ func doRequest(body, path string, nodes map[string]string) ([]json.RawMessage, e
 				_ = response.Body.Close()
 			}()
 			data, _ := io.ReadAll(response.Body)
-			nodeResult.Store(chainName, data)
+			resp := Response{}
+			json.Unmarshal(data, &resp)
+			i := resp.Result
+			nodeResult.Store(chainName, i)
 			xylog.Logger.Infof("chainName:%v, data:%v", chainName, string(data))
 			defer wg.Done()
 		}()
 	}
 	wg.Wait()
-	var result []json.RawMessage
+	result := make(map[string]any)
 	nodeResult.Range(func(k, v interface{}) bool {
-		// do merge
-		response := Response{}
-		json.Unmarshal([]byte(v.(string)), &response)
-		i := response.Result
-		result = append(result, i)
+		result[k.(string)] = v
 		return true
 	})
 	return result, nil
