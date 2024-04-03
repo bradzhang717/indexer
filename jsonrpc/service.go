@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
-	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/shopspring/decimal"
 	"github.com/uxuycom/indexer/model"
 	"github.com/uxuycom/indexer/protocol"
@@ -1007,15 +1006,12 @@ func (s *Service) GetAllChainStat(chains []string) (interface{}, error) {
 		xylog.Logger.Errorf("GetAllChainStat params err=%v", err)
 	}
 
-	result, _ := doRequest(string(body1), path, s.rpcServer.cfg.Config.ChainNodes)
-	// result json to map
-	xylog.Logger.Infof("GetAllChainStat result:%v", result)
-	var resultMap map[string]interface{}
-	err = json.Unmarshal([]byte(result), &resultMap)
+	result, err := doRequest(string(body1), path, s.rpcServer.cfg.Config.ChainNodes)
 	if err != nil {
-		return nil, err
+		xylog.Logger.Error(err)
 	}
-	return resultMap["result"], nil
+	xylog.Logger.Infof("GetAllChainStat result:%v", result)
+	return result, nil
 }
 
 func (s *Service) AllSearch(keyword, chain string) (interface{}, error) {
@@ -1032,18 +1028,12 @@ func (s *Service) AllSearch(keyword, chain string) (interface{}, error) {
 		xylog.Logger.Errorf("AllSearch params err=%v", err)
 	}
 	result, _ := doRequest(string(body), path, s.rpcServer.cfg.Config.ChainNodes)
-	// result json to map
 	xylog.Logger.Infof("AllSearch result:%v", result)
-	var resultMap map[string]interface{}
-	err = json.Unmarshal([]byte(result), &resultMap)
-	if err != nil {
-		return nil, err
-	}
-	return resultMap["result"], nil
+	return result, nil
 }
-func doRequest(body, path string, nodes map[string]string) (string, error) {
+func doRequest(body, path string, nodes map[string]string) (map[string]interface{}, error) {
 	if nodes == nil {
-		return "", nil
+		return nil, nil
 	}
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -1069,17 +1059,18 @@ func doRequest(body, path string, nodes map[string]string) (string, error) {
 				_ = response.Body.Close()
 			}()
 			data, _ := io.ReadAll(response.Body)
-			nodeResult.Store(chainName, data)
+			resp := Response{}
+			json.Unmarshal(data, &resp)
+			i := resp.Result
+			nodeResult.Store(chainName, i)
 			xylog.Logger.Infof("chainName:%v, data:%v", chainName, string(data))
 			defer wg.Done()
 		}()
 	}
 	wg.Wait()
-	result := "{}"
+	result := make(map[string]any)
 	nodeResult.Range(func(k, v interface{}) bool {
-		// do merge
-		patch, _ := jsonpatch.MergePatch([]byte(result), v.([]byte))
-		result = string(patch)
+		result[k.(string)] = v
 		return true
 	})
 	return result, nil
